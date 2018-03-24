@@ -161,6 +161,48 @@ public class comfun {
             itr.remove();
         }
     }     
+    
+    
+    
+    protected static  void hasIdsRemovelst( List<ids> Fks)
+    {
+      Iterator itr = Fks.iterator();
+        while (itr.hasNext())
+        {
+            ids  t =(ids)itr.next();
+            lSumBJCLogger.WriteLog( " removing list " + t.ID
+                    + " Count " +Fks.size()
+                    );
+          try {
+              t.finalize();
+          } catch (Throwable ex) {
+              lSumBJCLogger.WriteErrorStack("errror ",(Exception)ex);
+              
+          }
+            t = null;
+            itr.remove();
+        }
+    }     
+    
+    protected static  void hasTabIdsRemovelst( List<idTab> Fks)
+    {
+      Iterator itr = Fks.iterator();
+        while (itr.hasNext())
+        {
+            idTab  t =(idTab)itr.next();
+            lSumBJCLogger.WriteLog( " removing list " + t.Name
+                    + " Count " +Fks.size()
+                    );
+          try {
+              t.finalize();
+          } catch (Throwable ex) {
+              lSumBJCLogger.WriteErrorStack("errror ",(Exception)ex);
+              
+          }
+            t = null;
+            itr.remove();
+        }
+    }     
      
     
     
