@@ -8,6 +8,7 @@ package dbutils;
 import java.sql.DatabaseMetaData;
 
 import bj.BJCLogger;
+import static dbutils.idrive.lSumBJCLogger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -21,9 +22,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static dbutils.idrive.lSumBJCLogger;
 import java.sql.JDBCType;
 import java.sql.PreparedStatement;
+import org.eclipse.jgit.ignore.internal.Strings;
 
 /**
  * @author TGAJ2
@@ -129,91 +130,16 @@ public class Dbtables {
     }
     
     
-// get JOIN CLuae when there is limit pull 
-// filter from the destination Db and get only data for those rows 
-// Select * from tab1 a left join    
-    public String getRecuriveFKs1(itable itab, String s2Sch, int iRowCnt) {
-        String strJoin = "";
-        String CON_TABLE = ""; // check if there is referecne to the same table of 2 columns 
-        String strchldJOinCond = "";
-        String sfltrCond = "";
-        StringBuilder sWhrCond = new StringBuilder("");
-        String inclause = "";
-        String FKTableName = "";// is the table table which refrences the primary/Unique  key on another table 
-        String PKTableName = ""; // is the table name which is refrenced by a FK table name 
-        String FKTableColname = "";
-        String PKTableColname = "";
-        
-        StringBuilder sbJoin = new StringBuilder("");
-
-        if (itab.fktables != null) 
-        {
-            for (fkTable fktab : itab.fktables.gettables()) 
-            {
-                FKTableName = fktab.FkColumn.CON_TABLE;
-                PKTableName = fktab.PKColumn.CON_TABLE;
-                FKTableColname =  fktab.FkColumn.field.getName();
-                PKTableColname =  fktab.PKColumn.field.getName();
-                inclause = "";
-                
-                if (fktab.hasDups) 
-                {
-                    strJoin = strJoin + " JOIN ("
-                            + objFrmSchema.getName() + "."
-                            +  joinCon(objToSchema.gettable(PKTableName) , s2Sch)  
-                            + loopthurFindOthChilds(fktab, itab) 
-                            + "\n ) "
-                            + "  /*Condition */  " //+ PKTableName
-                            + " ON " + FKTableName + "."
-                            + FKTableColname + " =  "
-                             +PKTableName + "_" + FKTableColname
-                            + "."+ FKTableColname;
-                } 
-                else 
-                {
-                    sbJoin.append(loopthurFindOthChilds(fktab, itab) ).append(" /*condition*/ " );
-                    sbJoin.append( " ON " ).append( FKTableName) .append( ".").append( FKTableColname );
-                    sbJoin.append( " =  ").append( PKTableName).append("_").append(FKTableColname).append( ".").append(PKTableColname);
-                    sbJoin.append( " AND ").append(PKTableName).append("_" ).append(FKTableColname).append(".updt_timestmp < '2016-01-01'");
-                    sbJoin.append( " AND " ).append( FKTableName).append(  ".updt_timestmp < '2016-01-01'");                                  
-                    sbJoin.append( " \n AND NOT EXISTS \n");
-                    sbJoin.append( "( select 1 from  ");
-                                        sbJoin.append( objFrmSchema.getName()) .append( ".");
-                                        sbJoin.append(  itab.getName() ).append(  " ").append(  FKTableColname); // alias 
-                                        sbJoin.append(  " WHERE " );
-                                        sbJoin.append(  FKTableColname);
-                                        sbJoin.append(  "." ).append(FKTableColname).append("=");
-                                        sbJoin.append(FKTableName).append( ".");
-                                        sbJoin.append( FKTableColname);
-                                               //" add the PK <> PK "
-                                        sbJoin.append( " AND " ).append(FKTableColname).append(".updt_timestmp < '2016-01-01' ");
-                                        sbJoin.append(  PKConditionNOtEQ(itab, FKTableColname));
-                    sbJoin.append(  "\n ) " );
-                    sbJoin.append(  "  ");
-                }
-            }    // end for         
-            // join the select and where clauses 
-           // strJoin = strJoin + " " + sWhrCond.toString();
-        }
-        else 
-        {
-            //itab.sJoincondition =s2Sch + "." + itab.getName();
-            //  System.out.println("Recurisvelu calling but missede *****" +  itab.getName() );
-
-        }
-        strJoin = sbJoin.toString();
-        if (strJoin.trim() != "") {
-            itab.sJoincondition = s2Sch + "." + itab.getName() + " " + "  " + strJoin + "   " + "  /* "
-                    + itab.getName() + " */";
-        } else {
-            itab.sJoincondition = s2Sch + "." + itab.getName();
-        }
+    public String GetRecParents(itable itab, String s2Sch, int iRowCnt){
+        String ParentSelect = ""; 
         
         
         
-        return strJoin;
+        
+        return ParentSelect;
     }
-
+    
+    
    //get limit # of FKs from Fk table 
 /*select  a.transportation_mode_type_code ,  b.type_code, *   From tms.manifest a
      left join tms.transportation_mode_type_lu  b on a.transportation_mode_type_code = b.type_code 
@@ -347,6 +273,23 @@ public class Dbtables {
 
         int i = 0;
         int jbctype= 0;
+        String sPrintHeader= "";
+        int sPrintHeaderLen= 0;
+        tfield  tdesfld;
+
+        
+        // print the header 
+        
+        
+        
+        sPrintHeader = sPrintHeader+ String.format("\n|%20s | %10s | %5s | %20s|%1s|%7s |%10s | %100s|"
+                        , "Column Name", "Type", "Data_type","Default", "Size","Null", "Destination Type", "DDL" );
+        sPrintHeaderLen = sPrintHeader.length();
+        sPrintHeader = lSumBJCLogger.sTabPrint(sPrintHeader, sPrintHeaderLen, "-", "|");
+        
+        lSumBJCLogger.setSYSTEM_LOG_OUT(true);
+        //lSumBJCLogger.WriteLog(sPrintHeader);
+        
         try {
             while (srcTabCol.next()) {
 
@@ -362,27 +305,38 @@ public class Dbtables {
                      
                     
                     //  if (DbTabLocationType.equalsIgnoreCase("DESTINATION"))
-                    des.AddField(srcTabCol.getString("COLUMN_NAME"), srcTabCol.getShort("DATA_TYPE") + "" // tricky took 30 minutes to resolve the enum CRAP
+                    tdesfld = des.AddField(srcTabCol.getString("COLUMN_NAME"), srcTabCol.getShort("DATA_TYPE") + "" // tricky took 30 minutes to resolve the enum CRAP
                             , srcTabCol.getString("COLUMN_DEF"), i, srcTabCol.getInt("NULLABLE"), srcTabCol.getInt("COLUMN_SIZE")
                             , srcTabCol.getString("REMARKS")
                             , srcTabCol.getInt("DECIMAL_DIGITS")
                     );
-
-                    System.out.println(
-                            srcTabCol.getString("COLUMN_NAME") + "=COLUMN_NAME "
-                            + srcTabCol.getString("TYPE_NAME") + "=TYpename : "
-                            + srcTabCol.getString("DATA_TYPE") + "=DATA_TYPE : "
-                            + srcTabCol.getString("COLUMN_SIZE") + "=COLUMN_SIZE  : "
-                    );
+                    sPrintHeader = sPrintHeader + String.format("\n|%20s | %10s | %5s | %20s|%1s|%7s |%10s | %50s|"
+                            , srcTabCol.getString("COLUMN_NAME")
+                            , srcTabCol.getString("TYPE_NAME")
+                            , srcTabCol.getString("DATA_TYPE") 
+                            , srcTabCol.getString("COLUMN_DEF")
+                            ,  srcTabCol.getInt("NULLABLE")        
+                            , srcTabCol.getString("COLUMN_DEF") + " "+ srcTabCol.getInt("DECIMAL_DIGITS")
+                            , tdesfld.getType()
+                            , tdesfld.GetDDL()
+                            );
+                    
+                    
+                    
                 }
             }
         } catch (Exception ex) {
             lSumBJCLogger.WriteErrorStack("setToDbCreateTable: " + srcTabCol + ":" +  sSchema, ex);
 
         } finally {
-            lSumBJCLogger.WriteLog("des.GetDDL()");
+            //lSumBJCLogger.WriteLog("des.GetDDL()");
+            sPrintHeader = sPrintHeader + lSumBJCLogger.printLine( sPrintHeaderLen, "-", "|");
+            lSumBJCLogger.WriteLog(String.format(
+                    "Src TableName: %s.%s \t %s", sSchema, Src.getName(), objFrmSchema.getName(), des.getName())
+                            +sPrintHeader);
 
         }
+        lSumBJCLogger.setSYSTEM_LOG_OUT(false);
     }
 
     void getCreateIdxDDL(ResultSet srcTabPks, String sTableName,
@@ -471,13 +425,15 @@ public class Dbtables {
         ResultSet tabexists = null;
         String lTabName = sTabName;
         
-        if (objToSchema.getDbType()== dbtype.db.POSTGRES ) 
+        if (objToSchema.getDbType()== dbtype.db.POSTGRES ) {
             lTabName = lTabName.toLowerCase();
+            sSchemaName = sSchemaName.toLowerCase();
+        }
         
         try {
             tabexists = conn1.getMetaData()
                     .getTables(null, sSchemaName// from schema anme
-                            , lTabName, new String[]{"TABLE", "ALIAS"}
+                            , lTabName, new String[]{"TABLE", "AL IAS"} // do we need to pull if it is an alias 
                     );
             isDbtable = tabexists.next();
             tabexists.close();
@@ -496,11 +452,15 @@ public class Dbtables {
         int i = 0;
         lSumBJCLogger.WriteLog("Child tables \n\n");
         des.fktables = new fkTables();
-
+        des.dptables = new fkTables();// storing the child
+        lSumBJCLogger.setSYSTEM_LOG_OUT(true);
         try {
             while (srcChldTabs.next()) {
                 i++;
-                fkTable fk = new fkTable();
+                
+                fkTable fk = new fkTable();// to stire parent 
+                fkTable dp = new fkTable(); // store child table 
+                
                 lSumBJCLogger.WriteLog("   " + srcChldTabs.getString("FKCOLUMN_NAME")
                         + des.FieldByName(srcChldTabs.getString("FKCOLUMN_NAME")).getName()
                 );
@@ -509,12 +469,23 @@ public class Dbtables {
                 fk.Update_rule = dbtype.reference_option.values()[srcChldTabs.getInt("UPDATE_RULE")] ;
                 fk.Delete_rule = dbtype.reference_option.values()[srcChldTabs.getInt("DELETE_RULE")] ;
                 
+                dp.Update_rule = dbtype.reference_option.values()[srcChldTabs.getInt("UPDATE_RULE")] ;
+                dp.Delete_rule = dbtype.reference_option.values()[srcChldTabs.getInt("DELETE_RULE")] ;
+                
+                
                 
                 //fk.Delete_rule = srcChldTabs.getShort("DELETE_RULE");
                 fk.deferrability = "" + srcChldTabs.getShort("DEFERRABILITY");
-
+                dp.deferrability = "" + srcChldTabs.getShort("DEFERRABILITY");
+                
                 fk.AddFKField(des.FieldByName(srcChldTabs.getString("FKCOLUMN_NAME")), sTableName, srcChldTabs.getString("FKTABLE_SCHEM"), srcChldTabs.getString("FK_NAME")
                 );
+                
+                
+                dp.AddFKField(des.FieldByName(srcChldTabs.getString("FKCOLUMN_NAME")), sTableName, srcChldTabs.getString("FKTABLE_SCHEM"), srcChldTabs.getString("FK_NAME")
+                );
+                
+                
                 // if can;t fin dparentr load the parent table and its details
                 lSumBJCLogger.WriteLog("Add parenttable  in Schema:"
                         + srcChldTabs.getString("PKTABLE_SCHEM") + "."
@@ -537,7 +508,11 @@ public class Dbtables {
                     t = a.FieldByName(srcChldTabs.getString("PKCOLUMN_NAME"));
                     // compare if the datatypes; if not same print comments
                     fk.AddPKField(t, srcChldTabs.getString("PKTABLE_NAME"), srcChldTabs.getString("PKTABLE_SCHEM"), srcChldTabs.getString("PK_NAME")
+                            
                     );
+                    dp.AddPKField(t, srcChldTabs.getString("PKTABLE_NAME"), srcChldTabs.getString("PKTABLE_SCHEM"), srcChldTabs.getString("PK_NAME")                    );
+                    
+                
                     if (!Objects.equals(t.getType(), des.FieldByName(fk.FkColumn.field.getName()).getType())) {
 
                         fk.hasIssues = true;
@@ -547,9 +522,44 @@ public class Dbtables {
                     }
 
                     des.fktables.AddFkTable(fk);
+                    // child relation ship; B has FK from A; so A neds to Know abt B; Need to check if this already being added 
+                    // Appachan <--Parent-- Joe; Appachan <-Parent- Jee; So when code handles Joe Link from Apachan to --> Joe is added 
+                    
+                    
+                        
+                    List<String> FKSQL = a.dptables.gettables().stream()
+                                       .map(e -> ((fkTable) e).PKColumn.CON_TABLE + ";" + ((fkTable) e).PKColumn.field.getName()+ ";"
+                                                   + ((fkTable) e).FkColumn.CON_TABLE +";"+  ((fkTable) e).FkColumn.field.getName()
+                                       )
+                                       .collect(Collectors.toList());
+                    if (FKSQL.contains(dp.PKColumn.CON_TABLE + ";"+ dp.PKColumn.field.getName()+ ";" + dp.FkColumn.CON_TABLE + ";" + dp.FkColumn.field.getName())
+                            ) 
+                    { lSumBJCLogger.WriteLog( "++++++++++++++++++++++++++++++++++++++++++ PRSENT+++++++++++++++++++++++++++++++++++++++++++++"
+                            +  String.format("\n%s Adding Parent=%s; Parent_Key= %s; Child=%s; Child_key=%s", a.getName(),
+                                dp.PKColumn.CON_TABLE, dp.PKColumn.field.getName(),
+                                dp.FkColumn.CON_TABLE, dp.FkColumn.field.getName()
+                                ) 
+                            + "\n++++++++++++++++++++++++++++++++++++++++++ PRSENT+++++++++++++++++++++++++++++++++++++++++++++"
+                            ) ;
+                    }    
+                    else 
+                    {      
+                        lSumBJCLogger.WriteLog(
+                                 "************************************ADDING **************************************" + 
+                        String.format("\n%s Adding Parent=%s; Parent_Key= %s; Child=%s; Child_key=%s", a.getName(),
+                                dp.PKColumn.CON_TABLE, dp.PKColumn.field.getName(),
+                                dp.FkColumn.CON_TABLE, dp.FkColumn.field.getName()
+                                ) 
+                        );  
+                        a.dptables.AddFkTable(dp);
+                        System.out.println("************************************ADDED **************************************");
+                        
+                    }    
+                        
 					// After this Generate the JOIN SQL
 
                 }
+                
 
             }
         } catch (Exception ex) {
@@ -557,9 +567,11 @@ public class Dbtables {
         } catch (Error ex) {
             lSumBJCLogger.WriteErrorStack("", ex);
         } catch (Throwable ex) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(this.getClass().getName().log(Level.SEVERE, null, ex));
+            //lSumBJCLogger.WriteErrorStack("", ex);
         } finally {
             lSumBJCLogger.WriteLog("End Child tables \n\n");
+            lSumBJCLogger.setSYSTEM_LOG_OUT(false);
 
         }
 
