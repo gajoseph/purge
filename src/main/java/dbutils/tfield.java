@@ -160,8 +160,11 @@ public String GetDDL()
 // replace Sql Keywords
      String newName =(hassqlkeywords(Name)==true)? ('"' +   Name + '"') :  Name  ;
      
-      if (this.Type=="CHARACTER" ||
-          this.Type=="VARCHAR"  || this.Type=="CLOB"  )
+      if (this.Type=="CHARACTER" 
+             || this.Type=="CHAR" 
+             || this.Type=="VARCHAR"  
+             || this.Type=="CLOB"  
+         )
                 return newName
                         + "\t" + Type 
                         + "("  + Length 
@@ -190,8 +193,9 @@ public String GetDDL()
                         + ",\n";
     }
 
-
-
+public static void main(String[] args) {
+  tfield t = new tfield();
+}
 
 }
 
