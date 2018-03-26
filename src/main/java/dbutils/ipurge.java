@@ -6,42 +6,25 @@
 package dbutils;
 
 import bj.BJCLogger;
-import static dbutils.idrive.lPropertyReader;
-import static dbutils.idrive.lSumBJCLogger;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import dbutils.Dbtables;
-import static dbutils.idrive.lPropertyReader;
-import static dbutils.idrive.lSumBJCLogger;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Date;
-import java.util.stream.Collectors;
-import java.util.List;
-import org.eclipse.jgit.api.Git;
-
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-
-
-
-
 import bj.fileutils;
-import static bj.fileutils.bkupFile;
-import static bj.fileutils.delallFiles;
-import java.util.ArrayList;
-import java.util.Collection;
-import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LsRemoteCommand;
 
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RefUpdate;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static bj.fileutils.bkupFile;
+import static bj.fileutils.delallFiles;
 
 
 /**
@@ -441,7 +424,7 @@ public class ipurge extends idrive  {
     
   }
   /*
-  --GEO--C--    Delete rows based on a criteria 
+  --GEO--C--    Delete rows based on a criteria  add a paramter
   
   */  
   public void Delerows()  {
@@ -536,12 +519,18 @@ public class ipurge extends idrive  {
     
     
     
-    public idTab addTabs( String sPkTabColName , String sSchemaName, String sTabName,idTab pidTab , String sFKTableColname, int iCurrentDepth ){
+    public idTab addTabs( String sPkTabColName // Pk of the table(child/topmost paremt)
+            , String sSchemaName
+            , String sTabName // Tab name
+            , idTab pidTab // parent table id to which child tables PKs are added into
+            , String sFKTableColname // Child tables Fk to Parent tables PK
+            , int iCurrentDepth )
+    {
         ResultSet   objrsrecQry; 
         PreparedStatement _selStatement;
         
         String[] Values = new String[2] ;
-        String ssql = "";
+        String ssql ;
         boolean bhookedFk2pk= false;
         String sPrintHeader= "";
         int sPrintHeaderLen= 0;
@@ -582,13 +571,14 @@ public class ipurge extends idrive  {
      //               }
      //           }
 
-                 sPrintHeader = sPrintHeader+ 
-                         String.format("\n|%40s | %40s|", sPkTabColName, sFKTableColname );
+                sPrintHeader = sPrintHeader +
+                                String.format("\n|%40s | %40s|", sPkTabColName, sFKTableColname);
                 sPrintHeaderLen = sPrintHeader.length();
                 sPrintHeader = lSumBJCLogger.sTabPrint(sPrintHeader, sPrintHeaderLen, "-", "|");
                 System.out.print(sPrintHeader);
             }
-       while (objrsrecQry.next()) {
+       while (objrsrecQry.next())
+       {    // Set the header to print
            sPrintHeader =  String.format("\n|%40s | %40s|"
                             , objrsrecQry.getString("PK")
                             , objrsrecQry.getString("FK")
@@ -612,7 +602,7 @@ public class ipurge extends idrive  {
                         }    
                         //if (parentlids.Fks.isEmpty()) // add the child table name 
                         if (bhookedFk2pk==false )
-                        {   
+                        {   // 1st time we are adding a table name; P1,{Pk1{child1(THIS IS ADDED NOW){pk1,pk2:child2{pk1}}}, Pk2}
                             lidTab = new idTab();
                             lidTab.Name = sTabName;
                             lidTab.Pks.add(lids);
@@ -645,8 +635,6 @@ public class ipurge extends idrive  {
             //pidTab  = lidTab ;
         } 
         //else lidTab = pidTab;
-        
-        
          sPrintHeader = sPrintHeader + lSumBJCLogger.printLine( sPrintHeaderLen, "-", "|");
         
         
@@ -722,14 +710,11 @@ public String getPrepStatSQL(idTab pidTab){
                 );
                 // need to check if there are more than 1 PKS ie col1, col2 are pks
                 getRecuriveFKs1(objDBts.objToSchema.gettable(FKTableName)
-                        ,objDBts.objToSchema.getName(), iRowCnt+2 , 
-                        addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
-                                ,  objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
-                                , iRowCnt)
-                        //pidTab 
-                        
-                        
-                        );
+                                ,objDBts.objToSchema.getName(), iRowCnt+2 ,
+                                    addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
+                                    ,  objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
+                                    , iRowCnt)
+                                );
               
                 
                 
