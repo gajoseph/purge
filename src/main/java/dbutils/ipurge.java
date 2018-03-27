@@ -703,17 +703,18 @@ public String getPrepStatSQL(idTab pidTab){
                 System.out.println(
                 //String.format("Tab = %s\t; PKTableName=%s; PKcol= %s;  FKTableName=%s FKCol= %s",itab.getName(),PKTableName,PKTableColname,   FKTableName, FKTableColname )
                 String.format("%s%10d) Select %s From %s.%s where %s in ",  (new String(new char[iRowCnt]).replace("\0", "\t")),i
-                 ,FKTableColname 
-                        , objDBts.objToSchema.getName(),FKTableName 
-                , FKTableColname)
-                
-                );
+                              , FKTableColname
+                              , objDBts.objToSchema.getName(),FKTableName
+                              , FKTableColname)
+
+                            );
                 // need to check if there are more than 1 PKS ie col1, col2 are pks
                 getRecuriveFKs1(objDBts.objToSchema.gettable(FKTableName)
-                                ,objDBts.objToSchema.getName(), iRowCnt+2 ,
-                                    addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
-                                    ,  objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
-                                    , iRowCnt)
+                                , objDBts.objToSchema.getName(), iRowCnt+2
+                                , addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
+                                            , objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
+                                            , iRowCnt
+                                        )
                                 );
               
                 
@@ -729,7 +730,7 @@ public String getPrepStatSQL(idTab pidTab){
            // strJoin = strJoin + " " + sWhrCond.toString();
         }
         else 
-        {
+        {// no children i'm single and ready to be deleted w/ out any dependencies
             DeleteSql = String.format("Select %s from %s.%s ", itab.getPKField().getName(), objDBts.objToSchema.getName() ,  itab.getName()) ;
 
         }
