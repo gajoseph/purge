@@ -29,7 +29,7 @@ import static bj.fileutils.delallFiles;
 
 /**
  *
- * @author TGAJ2
+ * @author TGAJ2 testing merge
  */
 public class ipurge extends idrive  {
     public String SRC_DB_URL;
