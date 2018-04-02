@@ -25,6 +25,16 @@ public class tfield {
     public  dbtype.isnull Nullable;
     private boolean bPrimary= false ; 
     private String Comment="";
+
+    public String getFilterValue() {
+        return FilterValue;
+    }
+
+    public void setFilterValue(String filterValue) {
+        FilterValue = filterValue;
+    }
+
+    private String FilterValue= "";
    
     
     
