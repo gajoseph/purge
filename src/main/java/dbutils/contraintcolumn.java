@@ -20,7 +20,14 @@ public class contraintcolumn {
     public contraintcolumn( tfield tt) {
         field = new tfield();
         field = tt;
-        
+
+    }
+
+
+    public contraintcolumn() {
+        field = new tfield();
+
+
     }
     
   protected void finalize() throws java.lang.Throwable {

@@ -15,13 +15,11 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import static bj.fileutils.bkupFile;
 import static bj.fileutils.delallFiles;
@@ -455,7 +453,40 @@ public class ipurge extends idrive  {
         }// dont process the table if the table is no created in destination
         //else itab.= false
     }// end for
-  
+    Map<String, Long> result = idtabs.stream().collect(Collectors.groupingBy(
+            p -> p.Name, Collectors.counting( ))
+
+    );
+
+      System.out.println(result);
+      Map<Object, Map<Object, List<idTab>>> result2;
+      result2 = idtabs.stream().collect(Collectors.groupingBy(
+              e0 -> ((idTab) e0).Name
+              , Collectors.groupingBy(e1 -> {
+                  return ((idTab) e1).Pks.stream().collect(Collectors.groupingBy(e2 -> ((ids) e2).deleteable));
+              })
+
+      ));
+
+
+      System.out.println(result2);
+      result2.forEach((k, v) -> System.out.println(k + "\t" + v));
+      String Sdeleet = "";
+      String nodeleet = "";
+      for (idTab tab  : idtabs) {
+          System.out.print( "Table: \n" +  tab.Name); Sdeleet= ""; nodeleet = "";
+          for (ids pk : tab.Pks)
+              if (pk.deleteable)
+                  Sdeleet = Sdeleet + pk.Pkids.toString();
+              else
+                  nodeleet = nodeleet + pk.Pkids.toString();
+          System.out.println( " Sdeleet  = " + Sdeleet   +"\n \t nodeleet " + nodeleet  );
+
+      }
+
+
+
+
   }
   
   
@@ -516,155 +547,283 @@ public class ipurge extends idrive  {
     public void delQvs(){
         delallFiles(lPropertyReader.getProperty("SQL.DDL.PATH"));
     }
-    
-    
+
+
+
+    public boolean isDeletAble(ResultSet  objrsrecQry , String tabName) throws SQLException{
+    // Need a beter way thought passign the recordset and getting the correct values
+        boolean isDeleteable= true;
+        itable itab = objDBts.objToSchema.gettable(tabName);
+        tfield tfld;
+
+       for (int i =3; i<=objrsrecQry.getMetaData().getColumnCount(); i++)
+       {
+           try {
+                 tfld =itab.FieldByName( objrsrecQry.getMetaData().getColumnName(i).toUpperCase());
+                 if (tfld.getName()!= "")
+                     if  ( (objrsrecQry.getDate(i)==null)
+                             || objrsrecQry.getDate(i).getTime() >
+                             (new java.text.SimpleDateFormat("YYYY/MM/DD")).parse(tfld.getFilterValue()).getTime() )
+                     {
+                         isDeleteable= true;
+                         tfld.finalize();
+                         tfld= null;
+                         break;
+                     }
+
+           } catch (Throwable throwable) {
+               lSumBJCLogger.WriteErrorStack("Throwable From FieldByName", throwable);
+
+
+               ;
+           }
+       }
+
+        itab= null;
+        return isDeleteable;
+
+    }
+
+    public String getPrepStatSQL(idTab pidTab){
+        String sids = "";
+        if (pidTab!= null){
+            // check parent is same as previuos childs parent
+            if (!(pidTab.Name.equalsIgnoreCase(scurrParent)))
+            {
+                scurrParent =pidTab.Name;
+                SqlpreparedStat= "";
+               for (ids pk : pidTab.Pks )
+                   for (String id : pk.Pkids)
+                       sids = sids + "'" + id + "',";
+                if (!SqlpreparedStat.equalsIgnoreCase(""))
+                    SqlpreparedStat= "(" + SqlpreparedStat.substring(0, SqlpreparedStat.length()-1) + ")";
+                if (!sids.equalsIgnoreCase("")){
+                    sids= sids.substring(0, sids.length()-1);
+                    SqlpreparedStat = SqlpreparedStat + ":" + sids;}
+            }
+        }
+        return SqlpreparedStat;
+    }
+
+
+    public String getDbFetch_Limit(
+            String sPkTabColName // Pk of the table(child/topmost paremt)
+            , String sSchemaName
+            , String sTabName // Tab name
+            , idTab pidTab // parent table id to which child tables PKs are added into
+            , String sFKTableColname // Child tables Fk to Parent tables PK
+            , int iCurrentDepth
+
+
+    ){
+        String[] Values = new String[2];
+        String ssql = "";
+        int iRowCount= Integer.parseInt(lPropertyReader.getProperty("ALL.TAB.BATCH.SIZE"));
+
+        if (SqlpreparedStat.contains(":")) {
+            Values = SqlpreparedStat.split(":");
+            ssql = String.format("Select %s as PK, %s as FK, %s  From %s.%s WHERE %s in (%s) "
+                    , sPkTabColName, sFKTableColname,  lPropertyReader.getProperty("ALL.TAB.FIELD")
+                    , objDBts.objToSchema.getName(), sTabName, sFKTableColname, Values[1]);
+        } else {
+            ssql = String.format("Select %s as PK, %s as FK From %s.%s  where %s > '%s' "
+                    , sPkTabColName, sPkTabColName // here we are pulling PK as 2 columns
+                    , objDBts.objToSchema.getName(), sTabName, lPropertyReader.getProperty("ALL.TAB.FIELD")
+                    , lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE"));
+            // only for top level we are adding the limit; adding limit to shildren won't work
+            if (dbtype.db.POSTGRES.name().equals("POSTGRES"))
+                ssql = ssql + String.format(" Limit %d", iRowCount);
+            else if (dbtype.db.DB2.name().equals("DB2"))
+                ssql = ssql + String.format(" Fetch first %d rows only ", iRowCount);
+            else
+                ssql = ssql + String.format(" Limit %d", iRowCount);
+
+
+
+        }
+
+
+
+
+
+
+    return ssql;
+
+    }
     
     public idTab addTabs( String sPkTabColName // Pk of the table(child/topmost paremt)
             , String sSchemaName
             , String sTabName // Tab name
             , idTab pidTab // parent table id to which child tables PKs are added into
             , String sFKTableColname // Child tables Fk to Parent tables PK
-            , int iCurrentDepth )
+            , int iCurrentDepth
+            , contraintcolumn FkColumn
+            , contraintcolumn PKColumn)
     {
-        ResultSet   objrsrecQry; 
+        ResultSet objrsrecQry;
         PreparedStatement _selStatement;
-        
-        String[] Values = new String[2] ;
-        String ssql ;
-        boolean bhookedFk2pk= false;
-        String sPrintHeader= "";
-        int sPrintHeaderLen= 0;
-        
-        getPrepStatSQL(pidTab);// of the format (?,?,?,?):1,2,4,5,  not need to generate if the parent is same 
-        
-        if (SqlpreparedStat.contains(":")) { 
-            Values = SqlpreparedStat.split(":");
-            ssql =  String.format("Select %s as PK, %s as FK From %s.%s WHERE %s in (%s) "
-                    , sPkTabColName , sFKTableColname
-                    , objDBts.objToSchema.getName(),sTabName, sFKTableColname, Values[1]);
-        }
-        else 
-            ssql =  String.format("Select %s as PK, %s as FK From %s.%s  where updt_timestmp > '2018-03-21'  "
-                    , sPkTabColName, sPkTabColName // here we are pulling PK as 2 columns 
-                    , objDBts.objToSchema.getName(),sTabName);
-        
-        
-        // ids of a table has tabname {pk1,true,{childids},pk2,pk3}
-        idTab lidTab = null;
-        ids lids   ;
+
+        String ssql;// sql to get PK and FKS
+        boolean bhookedFk2pk = false;
+        String sPrintHeader = "";
+        int sPrintHeaderLen = 0;
+        idTab objidTab =null;
+        ids objPKID = null;
+        String lpk= "";
+
+        ids lids=null;
         boolean alreadyaddedTab = false;
+
+        updFilterValue(objDBts.objToSchema.gettable(sTabName));
+        getPrepStatSQL(pidTab);// of the format (?,?,?,?):1,2,4,5,  not need to generate if the parent is same 
+        ssql = getDbFetch_Limit(sPkTabColName,sSchemaName, sTabName , pidTab, sFKTableColname, iCurrentDepth ); // added limit in case we want to run in batches limit 10
+
+        // ids of a table has tabname {pk1,true,{childids},pk2,pk3}
         try {
             _selStatement = objDBts.conn1.prepareStatement(ssql);
-       
-            objrsrecQry = _selStatement.executeQuery(); // get the data from child table 
-       
-            if (objrsrecQry !=null){
-                // check if the tables is already added why though b/c if a table is already added we need to add only if the already insctae is a 
-                // highte depth level
-     //           for ( idTab tab: idtabs){
-     //               if (tab.Name.equalsIgnoreCase(sTabName)){
-     //                   lidTab = tab;
-     //                   alreadyaddedTab= true;
-     //                   pidTab = lidTab;
-     //                   break;
-     //
-     //               }
-     //           }
+            objrsrecQry = _selStatement.executeQuery(); // get the data from child table
 
-                sPrintHeader = sPrintHeader +
-                                String.format("\n|%40s | %40s|", sPkTabColName, sFKTableColname);
+            if (objrsrecQry != null) {
+                sPrintHeader = sPrintHeader +String.format("\n|%40s | %40s|", sPkTabColName, sFKTableColname);
                 sPrintHeaderLen = sPrintHeader.length();
                 sPrintHeader = lSumBJCLogger.sTabPrint(sPrintHeader, sPrintHeaderLen, "-", "|");
                 System.out.print(sPrintHeader);
+                objidTab  = new idTab() ; // create a new instance for child tbale eg housebill--> houseBillSplit; here creating a new insatcne of houseBillSplit to store all ids
+                objidTab.FkColumn = FkColumn;
+                objidTab.PKColumn = PKColumn;
+                objidTab.Name = sTabName;
+
             }
-       while (objrsrecQry.next())
-       {    // Set the header to print
-           sPrintHeader =  String.format("\n|%40s | %40s|"
-                            , objrsrecQry.getString("PK")
-                            , objrsrecQry.getString("FK")
-                            );
-           System.out.print(sPrintHeader);
-           
-           lids = new ids();// create a local ids to 
-           lids.ID = objrsrecQry.getString("PK");
-           lids.deleteable = true;
-           bhookedFk2pk=false;
+            while (objrsrecQry.next()) {    // Set the header to print
+                sPrintHeader = String.format("\n|%40s | %40s|"
+                        , objrsrecQry.getString("PK")
+                        , objrsrecQry.getString("FK")
+                );
+                System.out.print(sPrintHeader);
+                /*
+    public  String ID;
+    public  String FKID;
+    public boolean deleteable;
+    public  List<idTab> Fks;// not being used
+    public List<String> Pks; */
 
-           if (pidTab != null)// wee need to asscoiate the child rows 
-               for(ids parentlids  : pidTab.Pks)
-               {
-                   if (parentlids.ID.equalsIgnoreCase(objrsrecQry.getString("FK")))
-                   {//parentlids.Fks.add(lids);
-                        for(idTab chld  :parentlids.Fks)  { 
-                            if (chld.Name.equalsIgnoreCase(sTabName))
-                                bhookedFk2pk= true;
-                                chld.Pks.add(lids);    
-                        }    
-                        //if (parentlids.Fks.isEmpty()) // add the child table name 
-                        if (bhookedFk2pk==false )
-                        {   // 1st time we are adding a table name; P1,{Pk1{child1(THIS IS ADDED NOW){pk1,pk2:child2{pk1}}}, Pk2}
-                            lidTab = new idTab();
-                            lidTab.Name = sTabName;
-                            lidTab.Pks.add(lids);
-                            parentlids.Fks.add(lidTab);
-                        }
-                   }    
+                if (lpk != objrsrecQry.getString("FK"))// if its a new FK that is the rows is oing to new parent
+                {
+                    if (lids !=null)  objidTab.Pks.add(lids);
+                    lids = new ids();//
+                    lpk = objrsrecQry.getString("FK");
+                    lids.FKID = objrsrecQry.getString("FK");
 
-               }
-           else {
-               //if (alreadyaddedTab==false)
-               if (lidTab==null)
-                    lidTab = new idTab();
-               lidTab.Name = sTabName;
-               lidTab.Pks.add(lids);
-           }
-       } ;// wend 
-       
-    }
+                }
+                lids.deleteable = true;
+                lids.Pkids.add(objrsrecQry.getString("PK"));
+                // write a proc to see if the child row meets the criteria
 
-    catch (SQLException ex) {       lSumBJCLogger.WriteErrorStack("GetShcmea ", ex);           } 
-    finally {
-        objrsrecQry = null;
+                if (pidTab != null)// wee need to asscoiate the child rows
+                {// proc will fetch the asscoiated parent and create a child if not present or retries if there is onw
+                    lids.deleteable  = isDeletAble(objrsrecQry, sTabName); // for tables who has a parent we need to run this
 
-        _selStatement = null;
-        if ((pidTab == null)) // 
-        {
-            if (!(lidTab == null)) {               pidTab = lidTab ;            
-                idtabs.add(lidTab);
+                    // check if lids.deleteable   is false // then we need to check this for parent and to the top level parent; idially remove the PKS and asscoiated IDS
+                    if (lids.deleteable==false)                        updateDeletableStatus(objidTab , objrsrecQry.getString("FK"), false);// need to update all the parents
+
+                }
+                //else
+                    {// top level parent
+                    //if (alreadyaddedTab==false)
+                   /* if (chldidTab == null)
+                        chldidTab = new idTab();
+                    chldidTab.Name = sTabName;
+                    chldidTab.Pks.add(lids);*/
+                }
             }
-            //pidTab  = lidTab ;
-        } 
-        //else lidTab = pidTab;
-         sPrintHeader = sPrintHeader + lSumBJCLogger.printLine( sPrintHeaderLen, "-", "|");
-        
-        
-        return pidTab;
+            if (lids !=null) objidTab.Pks.add(lids);// need to do to add the last row
+            ;// wend
+
+        } catch (SQLException ex) {
+            lSumBJCLogger.WriteErrorStack("GetShcmea ", ex);
+        } finally {
+            objrsrecQry = null;
+
+            _selStatement = null;
+           // if ((pidTab == null)) //
+            {
+                if (!(objidTab  == null)) {
+                    pidTab = objidTab ;
+                    idtabs.add(objidTab );
+                }
+                //pidTab  = lidTab ;
+            }
+            //else lidTab = pidTab;
+            sPrintHeader = sPrintHeader + lSumBJCLogger.printLine(sPrintHeaderLen, "-", "|");
+
+
+            return pidTab;
 
         }    
         
     }
 
-public String getPrepStatSQL(idTab pidTab){
-    String sids = "";
-    if (pidTab!= null){
-        // check parent is same as previuos childs parent 
-        if (!(pidTab.Name.equalsIgnoreCase(scurrParent))) {
-            scurrParent =pidTab.Name;
-            for (ids pk: pidTab.Pks) {
-                SqlpreparedStat = SqlpreparedStat + "?,";
-                sids = sids + "'" + pk.ID + "',";
-            }
-            if (!SqlpreparedStat.equalsIgnoreCase(""))
-                SqlpreparedStat= "(" + SqlpreparedStat.substring(0, SqlpreparedStat.length()-1) + ")";
-            if (!sids.equalsIgnoreCase("")){
-                sids= sids.substring(0, sids.length()-1);
-                SqlpreparedStat = SqlpreparedStat + ":" + sids;}
+    public void updateDeletableStatus(idTab chldTab, String chldFKvalue, boolean isDeleteAble){
+      String sprntidTabName = "";
+        try {
+            /*
+            FKTableName = fktab.FkColumn.CON_TABLE;
+                PKTableName = fktab.PKColumn.CON_TABLE;
+                FKTableColname =  fktab.FkColumn.field.getName();
+                PKTableColname =  fktab.PKColumn.field.getName();
+             */
+            String PKTableName  = chldTab.PKColumn.CON_TABLE; // its parent
+            String PKTableColname =  chldTab.PKColumn.field.getName();
+
+            for (idTab tabcol : idtabs.stream().filter(tabs -> tabs.Name.equalsIgnoreCase(PKTableName))
+                                    .collect(Collectors.toList()) )
+                for ( ids id : tabcol.Pks)
+                      if (id.Pkids.stream().filter( str-> str.equalsIgnoreCase(chldFKvalue)).findAny().isPresent()) {
+                          id.deleteable = isDeleteAble; break; // come out
+                      }
         }
-    }        
-    return SqlpreparedStat;
-}    
-    
-// get JOIN CLuae when there is limit pull 
+        catch (Exception e) {
+            throw new RuntimeException("unexpected invocation exception: " + e.getMessage());
+        } catch (Error e) {
+            throw new Error("unexpected Error occured : " + e.getMessage());
+        } finally {////System.out.println("End of Funciton FieldBYname ");
+
+        }
+    }
+
+
+    public void updFilterValue(itable itab)
+    {// this proc will update and set the filter values; ideally there will be another proc that might call this to popluate from poreprty file/ input file tablename, fieldname, value
+         //use field by name
+        try {
+            tfield tfl = itab.FieldByName(lPropertyReader.getProperty("ALL.TAB.FIELD"));
+            tfl.setFilterValue(lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE"));
+
+        } catch (Throwable throwable) {
+            lSumBJCLogger.WriteErrorStack("Throwable From FieldByName", throwable);
+        }
+
+
+    }
+
+    public void DeleteRows(idTab tab, String sFKTableColname ){
+        String Sdeleet = "";
+        String NOdeleet = "";
+        for (ids pk : tab.Pks)
+            if (pk.deleteable)
+                Sdeleet = Sdeleet + "'" + pk.FKID +"',";
+        else
+                NOdeleet = NOdeleet + "'" + pk.FKID +"',";
+        if (!Sdeleet.equalsIgnoreCase("")) {
+            Sdeleet = Sdeleet.substring(0, Sdeleet.length() - 1) ;
+            lSumBJCLogger.WriteOut(
+                    String.format("\nDelete FROM %s.%s  where %s in (%s); \n /* %s*/", objDBts.objToSchema.getName(), tab.Name, sFKTableColname
+                            , Sdeleet, NOdeleet));
+
+
+        }
+    }
+// get JOIN CLuae when there is limit pull
 // filter from the destination Db and get only data for those rows 
 // Select * from tab1 a left join    
     public String getRecuriveFKs1(itable itab// Table name(child/1st starting table)
@@ -673,17 +832,19 @@ public String getPrepStatSQL(idTab pidTab){
             , idTab pidTab // parent table'sPK info  {tab1, {pk1,2,3..n)}
     ) 
     {
-        StringBuilder sWhrCond = new StringBuilder("");
-        String inclause = "";
-        String FKTableName = "";// is the table table which refrences the primary/Unique  key on another table 
+        String FKTableName = "";// is the table table which refrences the primary/Unique  key on another table
         String PKTableName = ""; // is the table name which is refrenced by a FK table name 
         String FKTableColname = "";
         String PKTableColname = "";
         String DeleteSql= "";
+        idTab lidTab= null;
         
         int i = 0; 
-        if (pidTab == null)
-            pidTab  = addTabs( itab.getPKField().getName(),  objDBts.objToSchema.getName(),  itab.getName() , pidTab ,itab.getPKField().getName(), iRowCnt  );
+        if (pidTab == null) {
+            pidTab = addTabs(itab.getPKField().getName(), objDBts.objToSchema.getName(), itab.getName(), pidTab, itab.getPKField().getName(), iRowCnt, null, null);
+            DeleteRows(pidTab, itab.getPKField().getName());// delete statement fro the top level
+        }
+        // update the fieltvalue for each table this will come as property
 
         if (itab.dptables != null) 
         {
@@ -699,7 +860,7 @@ public String getPrepStatSQL(idTab pidTab){
                 PKTableName = fktab.PKColumn.CON_TABLE;
                 FKTableColname =  fktab.FkColumn.field.getName();
                 PKTableColname =  fktab.PKColumn.field.getName();
-                inclause = "";
+                //inclause = "";
                 System.out.println(
                 //String.format("Tab = %s\t; PKTableName=%s; PKcol= %s;  FKTableName=%s FKCol= %s",itab.getName(),PKTableName,PKTableColname,   FKTableName, FKTableColname )
                 String.format("%s%10d) Select %s From %s.%s where %s in ",  (new String(new char[iRowCnt]).replace("\0", "\t")),i
@@ -708,16 +869,21 @@ public String getPrepStatSQL(idTab pidTab){
                               , FKTableColname)
 
                             );
+                // build the delete statements
+
                 // need to check if there are more than 1 PKS ie col1, col2 are pks
+                lidTab = addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
+                        , objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
+                        , iRowCnt
+                        , fktab.FkColumn
+                        , fktab.PKColumn
+                );
                 getRecuriveFKs1(objDBts.objToSchema.gettable(FKTableName)
                                 , objDBts.objToSchema.getName(), iRowCnt+2
-                                , addTabs( objDBts.objToSchema.gettable(FKTableName).getPKField().getName()
-                                            , objDBts.objToSchema.getName(),  FKTableName , pidTab, FKTableColname
-                                            , iRowCnt
-                                        )
+                                ,lidTab
                                 );
-              
-                
+
+                DeleteRows(lidTab, FKTableColname);// delete statement
                 
             }    // end for  
             System.out.println(
@@ -747,9 +913,10 @@ public String getPrepStatSQL(idTab pidTab){
     public static void main(String[] args) {
         ipurge ilpurge = new ipurge("");
 //        licopy.getTabBySchema("tms", "tms_tmp");
-        //   licopy.getTabBySchema("qtg", "qtg_tmp");  
-        
+        //   licopy.getTabBySchema("qtg", "qtg_tmp");
+
         //ilpurge.getTabBySchema("UNIPROD", "UNIPROD", "%OPERATOR_DIM%");
+
         ilpurge.qlikProj = "H:\\asd\\qwe-prj";
         ilpurge.qlikLoadScriptName = "LoadScript.txt";
         ilpurge.sFilespearatot = System.getProperty("file.separator");

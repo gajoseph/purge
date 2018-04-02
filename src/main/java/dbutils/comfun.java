@@ -170,7 +170,7 @@ public class comfun {
         while (itr.hasNext())
         {
             ids  t =(ids)itr.next();
-            lSumBJCLogger.WriteLog( " removing list " + t.ID
+            lSumBJCLogger.WriteLog( " removing list " + t.FKID
                     + " Count " +Fks.size()
                     );
           try {

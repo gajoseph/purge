@@ -13,8 +13,20 @@ import java.util.List;
  * @author tgaj2
  */
 public class idTab {
-    public  String Name;// table name 
+    public String getName() {
+        return Name;
+    }
+
+    public  String Name;// table name
+    public contraintcolumn FkColumn;
+    public contraintcolumn PKColumn;
+
+    public List<ids> getPks() {
+        return Pks;
+    }
+
     public  List<ids> Pks;
+
 
     
     
@@ -23,14 +35,20 @@ public idTab() {
         Name="";
         
         Pks = new ArrayList<ids>();
+        FkColumn = new contraintcolumn();
+        PKColumn = new contraintcolumn();
     }
 
-    
+
+
+
  protected void finalize() throws Throwable {
     try {
        comfun.hasIdsRemovelst(this.Pks);
        this.Pks.clear();
        this.Pks = null;
+       this.FkColumn.finalize();
+        this.PKColumn.finalize();
 //       super.finalize();
        
     }
@@ -45,3 +63,4 @@ public idTab() {
     }    
         
 }
+
