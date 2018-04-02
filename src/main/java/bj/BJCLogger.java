@@ -467,6 +467,16 @@ public class BJCLogger {
 
 
     }
+
+    public String GetErrFromStack (Throwable e  ){
+
+        final Writer result = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter( result );
+        e.printStackTrace( printWriter );
+        String ss = result.toString() ;
+
+        return e.getMessage() + ss;
+    }
 //--------------------------------------------------------------------------------------------------------
 
     public String GetErrFromStack (Exception e  ){
@@ -508,6 +518,27 @@ public class BJCLogger {
 
         }
     }
+
+
+    public void WriteErrorStack(String aContents , Throwable e){
+
+        try {
+            setContents(_sFilename , "[Throwable]\t"+aContents + "\t" +
+                    GetErrFromStack(e)
+
+
+                    + "\n");
+            //setContents(_sFilename , "[ERROR]\t"+aContents + "\t" + e.printStackTrace( new PrintWriter( new StringWriter() ) )     );
+        }
+        catch (IOException isi){ //   throws new  IOException(isi);
+
+            try {        setContents(_sFilename ,GetErrFromStack(isi) );           }
+            catch (FileNotFoundException eFnotFE){}
+            catch (IOException eFnotFE) {}
+
+        }
+    }
+
 
 
 
