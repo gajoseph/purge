@@ -695,20 +695,13 @@ public class ipurge extends idrive  {
 
             }
             while (objrsrecQry.next()) {    // Set the header to print
-                sPrintHeader = String.format("\n|%40s | %40s|"
-                        , objrsrecQry.getString("PK")
-                        , objrsrecQry.getString("FK")
-                );
+                sPrintHeader = String.format("\n|%40s | %40s|" , objrsrecQry.getString("PK"), objrsrecQry.getString("FK"));
                 System.out.print(sPrintHeader);
-                /*
-    public  String ID;
-    public  String FKID;
-    public boolean deleteable;
-    public  List<idTab> Fks;// not being used
-    public List<String> Pks; */
 
                 if (lpk != objrsrecQry.getString("FK"))// if its a new FK that is the rows is oing to new parent
-                {
+                {   // before adding do we need to check if FK is already being processed ? and also if the PKS are already being added;
+                    // Checking PK might be easy ; case when this happens; now we are adding all the dependant tables and one the depenet table has a parent shoudl we try to add the paerent
+
                     if (lids !=null)  objidTab.Pks.add(lids);
                     lids = new ids();//
                     lpk = objrsrecQry.getString("FK");
