@@ -91,7 +91,7 @@ public class fkTables {
                                 )
                             .findFirst();
         if (t.isPresent())    return t.get();
-        else return                   new fkTable();
+        else return                   new fkTable(fktab);
 
     }    
     

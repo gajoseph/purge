@@ -12,17 +12,21 @@ import java.util.List;
  *
  * @author tgaj2
  */
-public class ids {
-    public  String FKID; // for top level parent this will ""
-
-    public boolean isDeleteable() {
+public class ids extends tfield  implements Cloneable  {
+    public String FkID= "";// needs to be list to accombimideate more than i parent key ???
+    public ids  parIds;
+    public    boolean isDeleteable() {
         return deleteable;
     }
 
     public boolean deleteable;
 
-    public List<String> getPkids() {
+    public  List<String> getPkids() {
         return Pkids;
+    }
+    @Override
+    public ids clone() throws CloneNotSupportedException {
+        return (ids) super.clone();
     }
 
     //public  List<idTab> Fks;// not being used
@@ -42,24 +46,61 @@ public class ids {
 
     */
 
-    public ids() {
+    public ids( ) {
         super();
-        //ID="";
-        FKID = "";
-        deleteable= false;
+        deleteable= true;
+
         //Fks = new ArrayList<idTab>();
         Pkids = new ArrayList<String>();
+        //parIds  = new ids();
     }
+
+    public ids( tfield tt) {
+        super();
+        this.setName(tt.getName());
+        this.setType(tt.getType());
+        this.setValue(tt.getValue());
+
+        deleteable= false;
+        Pkids = new ArrayList<String>();
+        //parIds  = new ids();
+    }
+
+
+
+
+    public boolean  addChildKeyforaParentFkid(  String ChldPkValue ){
+            if (Pkids.contains(ChldPkValue))
+                return true  ;
+            else  {Pkids.add(ChldPkValue);
+                    return false;
+                    }
+
+    }
+
+    public boolean  checkPkvalueExits(String ChldPkValue){
+        return Pkids.contains(ChldPkValue);
+
+    }
+
+    public boolean  canChdKeyforaParentFkDeleteAble(  String ChldPkValue ){
+        if (checkPkvalueExits(ChldPkValue))
+            return this.deleteable==true;
+        else return true;
+
+
+    }
+
+
 
     
  protected void finalize() throws Throwable {
     try {
        //comfun.hasTabIdsRemovelst((this.Fks));
-       this.Pkids.clear();
+        this.Pkids.clear();
         this.Pkids = null;
-       //this.Fks.clear();
-       this.Pkids  = null;
-//       super.finalize();
+        super.finalize();
+        parIds.finalize();
        
     }
        catch (Exception e ){

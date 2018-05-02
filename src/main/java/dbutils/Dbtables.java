@@ -7,24 +7,17 @@ package dbutils;
 
 import java.sql.DatabaseMetaData;
 
-import bj.BJCLogger;
 import static dbutils.idrive.lSumBJCLogger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import java.sql.JDBCType;
 import java.sql.PreparedStatement;
-import org.eclipse.jgit.ignore.internal.Strings;
 
 /**
  * @author TGAJ2
@@ -36,7 +29,7 @@ public class Dbtables {
      */
     public static String tablename;
     public String tablocationType = "";
-    public ischema objToSchema; // referecme from the calling class
+    public ischema objToSchema; // referecme from the calling class; /* shld this be a collection in future */
     public ischema objFrmSchema; // referecme from the calling class
     public Connection conn1;// reference
     public boolean bprintFK = true;
@@ -458,8 +451,8 @@ public class Dbtables {
             while (srcChldTabs.next()) {
                 i++;
                 
-                fkTable fk = new fkTable();// to stire parent 
-                fkTable dp = new fkTable(); // store child table 
+                fkTable fk = new fkTable();// to stire parent
+                fkTable dp = new fkTable(); // store child table
                 
                 lSumBJCLogger.WriteLog("   " + srcChldTabs.getString("FKCOLUMN_NAME")
                         + des.FieldByName(srcChldTabs.getString("FKCOLUMN_NAME")).getName()

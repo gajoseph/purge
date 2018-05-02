@@ -67,6 +67,7 @@ public class BJCLogger {
 
     private String _SYSTEM_OUT = "TRUE";
     private boolean _SYSTEM_LOG_OUT =   true;
+    private boolean LOG_OUTPUT= true;// this is fpr debugging only. if false it won't write to log
     private String _fileFormat = "_yyyy_MM_dd__HH_mm_ss";
     private String _fileType = "log";
 
@@ -380,8 +381,6 @@ public class BJCLogger {
                 this._SYSTEM_OUT="FALSE";// temp flase
                 setContents(_sFilename , "[LOG]\t"+aContents);
                 this._SYSTEM_OUT    = old_SYSTEM_OUT;
-
-
 
             }
         }

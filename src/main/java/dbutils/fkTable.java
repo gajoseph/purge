@@ -5,14 +5,11 @@
  */
 package dbutils;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author TGAJ2
  */
-public class fkTable extends tfield {
+public class fkTable extends tfield implements Cloneable {
     public contraintcolumn FkColumn;
     public contraintcolumn PKColumn;
     public boolean hasIssues ;
@@ -21,11 +18,22 @@ public class fkTable extends tfield {
     public dbtype.reference_option Update_rule;
     public dbtype.reference_option Delete_rule;
     public String deferrability ;
-    
-public fkTable()
+
+
+public fkTable( fkTable fkTab)
 {
-    super(); 
-}      
+    super();
+
+    this.PKColumn = fkTab.PKColumn;
+    this.FkColumn = fkTab.FkColumn;
+
+}
+    public fkTable( )
+    {
+        super();
+
+    }
+
 
 protected  void AddFKField(tfield tt, String tabName, String  sSchema, String FK_NAME)   {
    FkColumn = new contraintcolumn(tt);

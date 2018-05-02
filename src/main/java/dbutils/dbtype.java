@@ -407,7 +407,17 @@ public static List<jdbcType>  loadDb2TYpes() {
     }
 
 
+     public static String limit_fetchrows(){
+    String slimiting = "";
+            if (dbtype.db.POSTGRES.name().equals("POSTGRES"))
+                slimiting  = String.format(" Limit %d", 10);
+            else if (dbtype.db.DB2.name().equals("DB2"))
+                slimiting   = String.format(" Fetch first %d rows only ", 10);
+            else
+                slimiting   = String.format(" Limit %d", 10);
 
+        return slimiting;
+     }
 
 
 

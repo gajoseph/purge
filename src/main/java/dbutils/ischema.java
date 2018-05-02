@@ -45,6 +45,15 @@ public class ischema  extends tfield{
         tabList         = new ArrayList<itable>();
     }
 
+    public ischema(String sSchemaName)
+    {
+        super();
+        this.setName(sSchemaName);
+        this.tabcount   = 0;
+        tabList         = new ArrayList<itable>();
+
+    }
+
     public String getCreateTabStatement() {
         return _CreateTabStatement;
     }
