@@ -1,5 +1,7 @@
 package dbutils;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.io.IOException;
 
 import static dbutils.idrive.lSumBJCLogger;
 import static dbutils.idrive.lPropertyReader;
@@ -19,6 +22,7 @@ public class idTabs extends tfield {
     private List<idTab> idtabs;
     public String scurrParent= "";
     public String SqlpreparedStat = "";
+    public List<String>  Filterlines;
 
 
 
@@ -26,6 +30,15 @@ public class idTabs extends tfield {
         super();
         fieldcount=0;
         idtabs    = new ArrayList<idTab>();
+        try {
+
+            if (!lPropertyReader.getProperty("CUSTOM.TAB.FILTER.FILE.NAME").equalsIgnoreCase(""))
+                Filterlines = Files.readAllLines(Paths.get(lPropertyReader.getProperty("CUSTOM.TAB.FILTER.FILE.NAME")));
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
+
     }
 
 
@@ -281,37 +294,71 @@ public class idTabs extends tfield {
         String[] Values = new String[2];
         String ssql = "";
         int iRowCount= Integer.parseInt(lPropertyReader.getProperty("ALL.TAB.BATCH.SIZE"));
+        String stabFilterline= "";
+        String[] atabFilterline;
+        String ALL_TAB_FIELD = lPropertyReader.getProperty("ALL.TAB.FIELD");
+        String ALL_TAB_FIELD_VALUE = lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE");
+        String sOCond = "";
+
+        for (String str : Filterlines){
+            if (str.contains(sTabName.toLowerCase()+ ",")) {
+                stabFilterline = str;
+                System.out.println("stabFilterline = " + stabFilterline );
+                break;
+            }
+        }
+
+        // split the line into an array
+        if (!stabFilterline.equalsIgnoreCase(""))
+        {
+            atabFilterline = stabFilterline.split(",");
+
+            if (!atabFilterline[1].equalsIgnoreCase(""))
+                ALL_TAB_FIELD = atabFilterline[1];
+            if (!atabFilterline[2].equalsIgnoreCase(""))
+                ALL_TAB_FIELD_VALUE = atabFilterline[2];
+            if (!atabFilterline[3].equalsIgnoreCase(""))
+                sOCond =  atabFilterline[3];
+        }
+
+
 
             if (SqlpreparedStat.contains(":"))
             {
             Values = SqlpreparedStat.split(":");
-            ssql = String.format("Select %s as PK, %s as FK, %s  From %s.%s WHERE (%s in %s or ( %s is null and %s %s '%s' ))"
+            ssql = String.format("Select %s as PK, %s as FK, %s  From %s.%s WHERE (%s in %s or ( %s is null and %s %s '%s' %s ))"
                     , sPkTabColName, sFKTableColname,  lPropertyReader.getProperty("ALL.TAB.FIELD")
                     , objDBts.objToSchema.getName(), sTabName, sFKTableColname, Values[1]
                     , sFKTableColname // sFKTableColname
-                    , lPropertyReader.getProperty("ALL.TAB.FIELD")
+                    , ALL_TAB_FIELD
                     , lPropertyReader.getProperty("ALL.TAB.FIELD.COMP.OPR")
-                    , lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE")
+                    , ALL_TAB_FIELD_VALUE
+                    , sOCond
             );
         } else {
             /*
             * Top level tables FK will be its own PK
             * */
-            ssql = String.format("Select %s as PK, %s as FK From %s.%s  where %s %s '%s' "//
+            ssql = String.format("Select %s as PK, %s as FK From %s.%s  where %s %s '%s' %s "//
                     , sPkTabColName
                     , sPkTabColName // here we are pulling PK as 2 columns making the FK as null
-                    , objDBts.objToSchema.getName(), sTabName, lPropertyReader.getProperty("ALL.TAB.FIELD")
+                    , objDBts.objToSchema.getName(), sTabName
+                    , ALL_TAB_FIELD
                     , lPropertyReader.getProperty("ALL.TAB.FIELD.COMP.OPR")
-                    , lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE"));
+                    , ALL_TAB_FIELD_VALUE
+                    , sOCond
+            );
             if (pidTab!=null)
                 if (pidTab.noRows2Delete) // if there is not FK--- parent has no PKs ready to be deleted
-                ssql = String.format("Select %s as PK, %s as FK From %s.%s  where %s %s '%s'  and %s is null "//
+                ssql = String.format("Select %s as PK, %s as FK From %s.%s  where %s %s '%s'  and %s is null  %s"//
                         , sPkTabColName
                         , sPkTabColName // here we are pulling PK as 2 columns making the FK as null
-                        , objDBts.objToSchema.getName(), sTabName, lPropertyReader.getProperty("ALL.TAB.FIELD")
+                        , objDBts.objToSchema.getName(), sTabName
+                        , ALL_TAB_FIELD
                         , lPropertyReader.getProperty("ALL.TAB.FIELD.COMP.OPR")
-                        , lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE")
+                        , ALL_TAB_FIELD_VALUE
                         , sFKTableColname
+                        , sOCond
                 );
 
 

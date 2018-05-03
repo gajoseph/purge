@@ -456,6 +456,31 @@ public class ipurge extends idrive  {
   
     
   }
+
+  public boolean isTabCandiadte(itable itab){
+      String ALL_TAB_EXCLUDE_ENDS_WITH= lPropertyReader.getProperty("ALL.TAB.EXCLUDE.ENDS.WITH");
+      String ALL_TAB_EXCLUDE_CONTAINS= lPropertyReader.getProperty("ALL.TAB.EXCLUDE.CONTAINS");
+      String ALL_TAB_EXCLUDE_BEGIN_WITH=lPropertyReader.getProperty("ALL.TAB.EXCLUDE.BEGIN.WITH");
+      String TAB_EXCLUDE_LIST[] = lPropertyReader.getProperty("TAB.EXCLUDE.LIST").split(",");// this has to be split and
+
+      boolean returnVal= true;
+      if (!ALL_TAB_EXCLUDE_ENDS_WITH.equalsIgnoreCase(""))
+          if (itab.getName().endsWith(ALL_TAB_EXCLUDE_ENDS_WITH))
+              returnVal=false;
+
+      if (!ALL_TAB_EXCLUDE_CONTAINS.equalsIgnoreCase(""))
+          if (itab.getName().contains(ALL_TAB_EXCLUDE_CONTAINS))
+              returnVal= false;
+
+      if (!ALL_TAB_EXCLUDE_BEGIN_WITH.equalsIgnoreCase(""))
+          if (itab.getName().startsWith(ALL_TAB_EXCLUDE_BEGIN_WITH))
+              returnVal=false;
+
+       returnVal = !Arrays.asList( TAB_EXCLUDE_LIST ).contains( itab.getName() );
+
+      return returnVal;
+
+  }
   /*
   --GEO--C--    Delete rows based on a criteria  add a paramter
   
@@ -468,9 +493,10 @@ public class ipurge extends idrive  {
    String WhereClause = "";
     if (objDBts.objFrmSchema==null)
       getTabBySchema(qlikTableSchemaName4qvs, qlikTableSchemaName4qvs, qlikTableName4qvs);
+
       strFrmSch = objDBts.objFrmSchema.getName();
      for (itable itab : objDBts.objToSchema.gettables()) {
-        if (!itab.getName().endsWith(lPropertyReader.getProperty("ALL.TAB.EXCLUDE")))
+        if (isTabCandiadte(itab))// need to convert in2 a list
         if (objDBts.isDbtable(objDBts.objFrmSchema.getName(), itab.getName()))
         //if (this.lidTabs.getidTabByTabName(itab.getName())==null)
         { /* db2 doens't like toLower */

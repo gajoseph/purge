@@ -1,0 +1,1 @@
+tab1,updt_timestmp,,AND 1<>1
