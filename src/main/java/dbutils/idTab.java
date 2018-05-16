@@ -8,13 +8,10 @@ package dbutils;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static dbutils.idrive.lPropertyReader;
 import static dbutils.idrive.lSumBJCLogger;
-import static dbutils.ipurge.objDBts;
 
 /**
  *
@@ -31,15 +28,11 @@ public class idTab extends tfield{
     public boolean hasDelStatGenByAnotherParent= false ;
 
 
-
-    
-    
 public idTab(String stabName) {
         super();
         this.setName(stabName);// schema name has to be stored
         parentId_pkids = new fkids();
         noRows2Delete= true;
-
 
     }
 
@@ -48,9 +41,7 @@ public idTab(String stabName) {
 *
 * */
     public ids getfkid(String fkParentValue){
-
         return parentId_pkids.getFkObjforaPK(fkParentValue);
-
 
     }
 
@@ -142,11 +133,9 @@ public idTab(String stabName) {
 
         SqlpreparedStat= " ";
         for (fkid fk : this.parentId_pkids.fkids() ) {
-            //for (ids pkid : fk.Pks)
-            //    sids = sids + pkid.Pkids.stream().collect(Collectors.joining("','"));//, "('", "')"));
-           // sids = "('" +sids +  "')";
+
             sids = sids + fk.Pks.stream().map(ids -> ids.Pkids.stream().map(Object::toString).collect(Collectors.joining("','")))
-            .collect(Collectors.joining("','", "('", "')"));
+                    .collect(Collectors.joining("','", "('", "')"));
 
             //SqlpreparedStat = "(" + SqlpreparedStat.substring(0, SqlpreparedStat.length() - 1) + ")"; saving for prepared statement
             if (!sids.equalsIgnoreCase("")) {

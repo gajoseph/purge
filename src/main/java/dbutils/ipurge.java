@@ -17,10 +17,16 @@ import org.eclipse.jgit.api.LsRemoteCommand;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.cert.CollectionCertStoreParameters;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -28,8 +34,7 @@ import java.util.stream.Collectors;
 import static bj.fileutils.bkupFile;
 import static bj.fileutils.delallFiles;
 import static dbutils.fkid.*;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.*;
 
 
 /**
@@ -481,11 +486,80 @@ public class ipurge extends idrive  {
       return returnVal;
 
   }
+
+  public String  setCustomjoin(){
+      String CUSTOM_TAB_JOIN_FILE_NAME= lPropertyReader.getProperty("CUSTOM.TAB.JOIN.FILE.NAME");
+      List<String>  CusJoins;
+      String stabCusJoin;
+      String atabCusJoin[] ;
+      try {
+            if  (CUSTOM_TAB_JOIN_FILE_NAME.equalsIgnoreCase(""))
+                return "";
+            CusJoins = Files.readAllLines(Paths.get(CUSTOM_TAB_JOIN_FILE_NAME));
+            // to do
+            // go by eac line seah fro the tab;le ; ad parent table are they joined by same column ; then exit ; if difff column then remove the add these new info ; if no link establish a link
+           // FK tables ; and dp tables
+           for (String str : CusJoins){
+               // split again by comman
+               atabCusJoin=  str.split(",");// this has to be split and
+               // 1sat will be child table; 2nd will be its column that refrenece
+               itable iChtab = objDBts.objToSchema.gettable(atabCusJoin[0].toUpperCase()); // found the table
+               itable iPatab = objDBts.objToSchema.gettable(atabCusJoin[2].toUpperCase()); // found the table
+               tfield iPafld = iPatab.FieldByName(atabCusJoin[3].toUpperCase());
+               tfield iChld = iChtab.FieldByName(atabCusJoin[1].toUpperCase());
+
+               //itab.fktables.gettable(atabCusJoin[3])
+               if (iChtab!=null)
+               if ((iPatab!=null) &  (!iPafld.getName().equalsIgnoreCase(""))){
+                   Map<fkTable, Boolean> tt = iChtab.fktables.getFktable(atabCusJoin[2].toUpperCase(), objDBts.objToSchema.getName());
+                   //tt.forEach((k, v) -> System.out.println("key: " + k + " value:" + v));
+                   for(fkTable id : tt.keySet()){
+                       Boolean bfound= tt.get(id);
+                       if (bfound )
+                            if (id.PKColumn.field.getName().equalsIgnoreCase(iPafld.getName()))// same fields already added
+
+                                return "";
+
+                   }
+
+                   fkTable fk = new fkTable();// to stire parent
+                   fkTable dp = new fkTable(); // store child table
+                   String sFKNAME= objDBts.objToSchema.getName() + iChtab.getName() + iChld.getName()+iPatab.getName() + iPafld.getName();
+                   fk.AddFKField(iChld, iChtab.getName(), objDBts.objToSchema.getName(),sFKNAME
+                   );
+
+                   dp.AddFKField(iChld, iChtab.getName(), objDBts.objToSchema.getName(),sFKNAME);
+
+
+                   String sPKNAME= objDBts.objToSchema.getName() + iPatab.getName() + iPafld.getName() + iChtab.getName() + iChld.getName();
+
+                   fk.AddPKField(iPafld, iPatab.getName(), objDBts.objToSchema.getName(), sPKNAME);
+                   dp.AddPKField(iPafld, iPatab.getName(), objDBts.objToSchema.getName(), sPKNAME);
+                   iChtab.fktables.AddFkTable(fk);
+                   iPatab.dptables.AddFkTable(dp);
+
+                   //
+               }
+           }
+       }
+            catch (IOException e) {
+            System.out.println(e);
+            }
+      catch (Throwable ex) {
+          //Logger.getLogger(this.getClass().getName().log(Level.SEVERE, null, ex));
+          lSumBJCLogger.WriteErrorStack("", ex);
+      }
+
+      return "";
+
+  }
   /*
   --GEO--C--    Delete rows based on a criteria  add a paramter
   
-  */  
-  public void Delerows()  {
+  */
+
+
+  public void genDeleteStatements()  {
    String strsql = "";
    String strFrmSch = "";
    String strInsSql = "";
@@ -493,7 +567,8 @@ public class ipurge extends idrive  {
    String WhereClause = "";
     if (objDBts.objFrmSchema==null)
       getTabBySchema(qlikTableSchemaName4qvs, qlikTableSchemaName4qvs, qlikTableName4qvs);
-
+    // add the custome join
+     setCustomjoin();
       strFrmSch = objDBts.objFrmSchema.getName();
      for (itable itab : objDBts.objToSchema.gettables()) {
         if (isTabCandiadte(itab))// need to convert in2 a list
@@ -525,11 +600,7 @@ public class ipurge extends idrive  {
                         null
                 );// get this from from Schema Clause
 
-
-
             }
-
-                //WhereClause = WhereClause + "  LIMIT " + limitSize;
 
 
             System.out.println( "--------------------------------------------------------------------------------"    );
@@ -544,7 +615,6 @@ public class ipurge extends idrive  {
         new lop thru the itabs and print the delete statement
         get the last child; recurisevely thur all the way to the top level parents and see if that id can be deleted
         reason being if another child table row of the same parent may not qualify the parent's deletable status is set to false
-
        */
 
       for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
@@ -556,9 +626,6 @@ public class ipurge extends idrive  {
           }
       }
       System.out.println(sStartTime + "\t " +  "End" + new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date()));
-
-
-
 
 
   }
@@ -657,65 +724,133 @@ public class ipurge extends idrive  {
     }
 
 
-
     public void DeleteRows(idTab tab, String sFKTableColname ){
         String Sdeleet = "";
         String NOdeleet = "";
         String sids2del = "";
-        for (fkid fkid : tab.parentId_pkids.fkids()){
-            for (ids pids : fkid.Pks) {
+          String slamdaidsNOT2del ;
+          String slamdaids2del;
 
-                if (pids.deleteable)
-                    Sdeleet = Sdeleet+ pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
-                else
-                    NOdeleet = NOdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
-                System.out.println(pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'")) + "Sdeleet =  " + Sdeleet);
-        }
+       // final StringBuilder slamdaidsNOT2del = new StringBuilder();
+         //String slamdaids2del = new StringBuilder();
+        ExecutorService executor = null;
+        try {
+            executor = Executors.newFixedThreadPool(3);
 
-        }
-        sids2del = sids2del +  tab.parentId_pkids.fkids().stream().map( fkid -> fkid.Pks.stream()
-                .filter(ids -> ids.deleteable==true )
-                .map(ids -> ids.Pkids.stream()
-                .map(Object::toString)
-                .collect(Collectors.joining("','")))
-                .collect(Collectors.joining("','")))
-                .distinct()
-                .collect(Collectors.joining("','", "('", "')"))
-        ;
-        tab.hasDelStatGenByAnotherParent = true;
-        List<Map<Boolean, Map<List<String>, Long>>> dummy =  tab.parentId_pkids.fkids().stream().map((fkid fkid) -> fkid.Pks.stream().collect(groupingBy( (ids ids) -> ids.deleteable
-                , groupingBy( (ids ids)-> ids.Pkids, Collectors.counting())) ))
+            delthread t1;
+            for (fkid fkid : tab.parentId_pkids.fkids()) {
+                for (ids pids : fkid.Pks) {
+
+                    if (pids.deleteable)
+                        Sdeleet = Sdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+                    else
+                        NOdeleet = NOdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+                    System.out.println(pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'")) + "Sdeleet =  " + Sdeleet);
+                }
+
+            }
+            sids2del = sids2del + tab.parentId_pkids.fkids().stream().map(fkid -> fkid.Pks.stream()
+                    .filter(ids -> ids.deleteable == true)
+                    .map(ids -> ids.Pkids.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining("','")))
+                    .collect(Collectors.joining("','")))
+                    .distinct()
+                    .collect(Collectors.joining("','", "('", "')"))
+            ;
+            /*Map<Boolean,List<String> >tmp = tab.parentId_pkids.fkids().stream()
+                    .map(fkid -> fkid.Pks.stream()
+                            .collect(Collectors.partitioningBy(ids -> ids. )
+                    )
+
+                        )
+
+            );
+
+*/
+        /*    tab.parentId_pkids.fkids().stream().map(fkid -> fkid.Pks
+                    .forEach(ids -> {
+                        if (ids.deleteable == true){
+                            slamdaids2del = ids.Pkids.stream()
+                                        .map(Object::toString)
+                                        .distinct()
+                                        .collect(Collectors.joining("','"));
+                                    }
+                                    else{
+                            slamdaidsNOT2del = ids.Pkids.stream()
+                                .map(Object::toString)
+                                .distinct()
+                                .collect(Collectors.joining("','"));
+                        }
+
+
+                    } ));
+
+        */
+
+
+            tab.hasDelStatGenByAnotherParent = true;
+            List<Map<Boolean, Map<List<String>, Long>>> dummy = tab.parentId_pkids.fkids().stream().map((fkid fkid) -> fkid.Pks.stream().collect(groupingBy((ids ids) -> ids.deleteable
+                    , groupingBy((ids ids) -> ids.Pkids, Collectors.counting()))))
                     .collect(Collectors.toList());
 
-        Map<String, Long> dummy1= tab.parentId_pkids.fkids().stream().map(fkid->fkid.PKColumn.CON_TABLE)
-                    .collect(groupingBy((String s)->s,   Collectors.counting()));
+            Map<String, Long> dummy1 = tab.parentId_pkids.fkids().stream().map(fkid -> fkid.PKColumn.CON_TABLE)
+                    .collect(groupingBy((String s) -> s, Collectors.counting()));
 
 
-
-        Map<String, Map<String, Long>> dummy2;
-        Map<String, Map<String, Long>> map = new HashMap<>();
+            Map<String, Map<String, Long>> dummy2;
+            Map<String, Map<String, Long>> map = new HashMap<>();
        /* for (fkid s : tab.parentId_pkids.fkids()) {
             map.computeIfAbsent(s.getFkTabname(), key -> new HashMap<>()).computeIfAbsent(s.Pks.stream().collect(groupingBy((ids ids) -> ids.FkID, Collectors.counting())));
         }
-*/        dummy2 = map;
+*/
+            dummy2 = map;
 
-
-        System.out.println("Sids " + sids2del + "dummy = " + dummy + " dummy 1= " + dummy1 + " dummy2 = " + dummy2);
+            System.out.println("Sids " + sids2del + "dummy = " + dummy + " dummy 1= " + dummy1 + " dummy2 = " + dummy2);
         /*
         createa  prepared statement; exec deletes by batches of ~2000 --batch size; threads even though at db is will be queued; it will be kind of parallel -- ready for next batch
         createa  prepared statement; exec deletes by batches of ~2000 --batch size; threads even though at db is will be queued; it will be kind of parallel -- ready for next batch
         */
-        if (!sids2del.equalsIgnoreCase(""))
-        {
-            //Sdeleet = Sdeleet.substring(0, Sdeleet.length() - 1) ;
-            lSumBJCLogger.setSYSTEM_LOG_OUT(true);
-            lSumBJCLogger.WriteOut(
-                    String.format("\nDelete FROM %s.%s  where %s in %s; \n /* %s*/", objDBts.objToSchema.getName(), tab.getName(), sFKTableColname
-                            , sids2del, NOdeleet));
+            if (!sids2del.equalsIgnoreCase("")) {
+                //Sdeleet = Sdeleet.substring(0, Sdeleet.length() - 1) ;
+                lSumBJCLogger.setSYSTEM_LOG_OUT(true);
+                lSumBJCLogger.WriteOut(
+                        String.format("\nDelete FROM %s.%s  where %s in %s; \n /* %s*/", objDBts.objToSchema.getName(), tab.getName(), sFKTableColname
+                                , sids2del, NOdeleet));
+        /* create an array that holds list of connection; when the thread are created pass an available conn from list to thread; when thread is done set the status as available
+        *
+        * */
 
+                t1 = new delthread(tab.getName() + "",
+                        String.format("\nDelete FROM %s.%s  where %s in %s; \n /* %s*/", objDBts.objToSchema.getName(), tab.getName(), sFKTableColname
+                                , sids2del, NOdeleet)
+                        , lPropertyReader.getProperty("SRC.DB.URL"));// Destination is run as threads
+
+                t1.Rtype = t1.Rtype.JDBCBATCH;
+                executor.execute(t1);
+
+
+            }
+        }
+        catch (Exception e) {
+            _iErrDesc = "Exception !! in tquery.open() Err Code " + e.getCause() + "\n" + e.getMessage();
+            System.out.println("\nError:" + _iErrDesc);
+//				    lSumBJCLogger.WriteErrorStack("getReportDetails " ,e ) ;
+
+        } finally {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                _iErrDesc = "executor.awaitTermination!!!!!!!! :: " + e.getCause() + "\n" + e.getMessage();
+                System.out.println("\n:" + _iErrDesc);
+            }
 
         }
+
     }
+
+
 // get JOIN CLuae when there is limit pull
 // filter from the destination Db and get only data for those rows 
 // Select * from tab1 a left join    
@@ -850,7 +985,7 @@ public class ipurge extends idrive  {
 
 
        // ilpurge.genQvs();
-        ilpurge.Delerows();
+        ilpurge.genDeleteStatements();
 
 
         ilpurge = null;

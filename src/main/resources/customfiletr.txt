@@ -1,1 +1,1 @@
-tab1,updt_timestmp,,AND 1<>1
+tab3,updt_timestmp,2018-04-19,AND 1<>1

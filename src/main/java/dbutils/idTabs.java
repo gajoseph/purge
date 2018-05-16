@@ -31,38 +31,36 @@ public class idTabs extends tfield {
         fieldcount=0;
         idtabs    = new ArrayList<idTab>();
         try {
-
+        // Loading custom filter from file
             if (!lPropertyReader.getProperty("CUSTOM.TAB.FILTER.FILE.NAME").equalsIgnoreCase(""))
                 Filterlines = Files.readAllLines(Paths.get(lPropertyReader.getProperty("CUSTOM.TAB.FILTER.FILE.NAME")));
         }
         catch (IOException e) {
             System.out.println(e);
+            lSumBJCLogger.WriteErrorStack( this.getClass().getName() ,e );
         }
 
     }
 
-
     public List<idTab> getidtabs(){
-
         return idtabs;
-
     }
 
-    public void updFilterValue(itable itab)
+    public void updFilterValue(itable itab, String ALL_TAB_FIELD, String ALL_TAB_FIELD_VALUE)
     {
         /* this proc will update and set the filter values; ideally there will be another proc that might call this to popluate from poreprty file/ input file tablename, fieldname, value
             use field by name
         */
         try {
-            tfield tfl = itab.FieldByName(lPropertyReader.getProperty("ALL.TAB.FIELD"));
-            tfl.setFilterValue(lPropertyReader.getProperty("ALL.TAB.FIELD.VALUE"));
+            tfield tfl = itab.FieldByName(ALL_TAB_FIELD);
+            tfl.setFilterValue(ALL_TAB_FIELD_VALUE);
 
         } catch (Throwable throwable) {
             lSumBJCLogger.WriteErrorStack("Throwable From FieldByName", throwable);
         }
 
-
     }
+
     public idTab getitTabByforlooop(String sTabName ){
         idTab lidTab = null;
 
@@ -94,21 +92,10 @@ public class idTabs extends tfield {
 
     }
 
-    public idTab getIdTabByName(String sTabName )
-    {
-        List<idTab> tabs = doesTabExistforTabName( sTabName);
-        idTab lidTab = null;
-        if (!tabs.isEmpty())
-            lidTab =  tabs.get(0);
-
-        return lidTab;
-    }
-
-
     public idTab initidTab(String sTabName){
 
         idTab initidTab =   new idTab(sTabName); // create a new instance for child tbale eg housebill--> houseBillSplit; here creating a new insatcne of houseBillSplit to store all ids
-        updFilterValue(objDBts.objToSchema.gettable(sTabName));
+
         return initidTab ;
     }
 
@@ -261,10 +248,21 @@ public class idTabs extends tfield {
             , fkTable  fkTab           /* fk Table*/
             )
     {
+        String sPrintHeader;
+        int sPrintHeaderLen;
         idTab objidTab =null;
 
         //Check if the table has been added
         objidTab = getidTab(sTabName);
+        // reject if no PK
+        if (objDBts.objToSchema.gettable(sTabName).getPKField().getName().equalsIgnoreCase("UNKNOW")) {
+            sPrintHeader =  String.format("\n|%20s  NO  %20s|", sTabName, "Priary key");
+            sPrintHeaderLen = sPrintHeader.length();
+            sPrintHeader = lSumBJCLogger.sTabPrint(sPrintHeader, sPrintHeaderLen, "-", "|");
+            System.out.print(sPrintHeader);
+
+            return objidTab;
+        }
        /* if (objidTab.isAlreadyAddedParentPKs(fkTab))
             return objidTab; // alreadyu we have added no need to go down any more what if thisis coming from doff path anotyjer parent
         */
@@ -320,7 +318,10 @@ public class idTabs extends tfield {
             if (!atabFilterline[3].equalsIgnoreCase(""))
                 sOCond =  atabFilterline[3];
         }
-
+        //
+        //initidTab() set the filetr
+        updFilterValue(objDBts.objToSchema.gettable(sTabName),ALL_TAB_FIELD, ALL_TAB_FIELD_VALUE)
+        ;
 
 
             if (SqlpreparedStat.contains(":"))

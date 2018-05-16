@@ -5,9 +5,7 @@
  */
 package dbutils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  *
@@ -72,26 +70,46 @@ public class fkTables {
    
     */
     
-    public fkTable gettable( String tabName ){
-    
+    private  Optional<fkTable>  gettable( String tabName , String schemaName ){
+
         Optional<fkTable>  t= fkTabList.stream()
-                        .filter(u -> u.getName().equalsIgnoreCase(tabName))
-                            .findFirst();
-        if (t.isPresent())    return t.get();
-        else return                   new fkTable();
+                .filter(u -> u.PKColumn.CON_TABLE.equalsIgnoreCase(tabName)
+                        && u.PKColumn.CON_SCHEMA.equalsIgnoreCase(schemaName)
+                )
+                .findFirst();
+        return t;
 
     }
-    
-    
+
+    public  Map<fkTable, Boolean>  getFktable( String tabName , String schemaName ){
+
+        Optional<fkTable> t = gettable(tabName, schemaName);
+        Map<fkTable, Boolean> t1= new HashMap<>();
+
+        if (t.isPresent())
+            t1.put(t.get(), true );
+        else
+            t1.put(new fkTable(), false );
+
+
+        return t1;
+
+    }
+
+
+
+
     public fkTable FndMutipleKStoSamePKs( fkTable fktab ){
     
-        Optional<fkTable>  t= fkTabList.stream()
+    /* Optional<fkTable>  t= fkTabList.stream()
                         .filter(u -> u.PKColumn.CON_TABLE.equalsIgnoreCase(fktab.PKColumn.CON_TABLE)  
                                     && u.PKColumn.CON_SCHEMA.equalsIgnoreCase(fktab.PKColumn.CON_SCHEMA)
                                 )
                             .findFirst();
-        if (t.isPresent())    return t.get();
-        else return                   new fkTable(fktab);
+    */
+        Optional<fkTable> t = gettable(fktab.PKColumn.CON_TABLE, fktab.PKColumn.CON_SCHEMA);
+        if (t.isPresent()) return t.get();
+        else return new fkTable(fktab);
 
     }    
     
