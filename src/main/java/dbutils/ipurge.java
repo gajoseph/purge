@@ -463,10 +463,16 @@ public class ipurge extends idrive  {
   }
 
   public boolean isTabCandiadte(itable itab){
+        /*
+        * Checing the paramters from resource file  Tabs to be excluded
+        * Staring w/
+        * Ending w/
+        * contains ; exclude list a,b
+        * */
       String ALL_TAB_EXCLUDE_ENDS_WITH= lPropertyReader.getProperty("ALL.TAB.EXCLUDE.ENDS.WITH");
       String ALL_TAB_EXCLUDE_CONTAINS= lPropertyReader.getProperty("ALL.TAB.EXCLUDE.CONTAINS");
       String ALL_TAB_EXCLUDE_BEGIN_WITH=lPropertyReader.getProperty("ALL.TAB.EXCLUDE.BEGIN.WITH");
-      String TAB_EXCLUDE_LIST[] = lPropertyReader.getProperty("TAB.EXCLUDE.LIST").split(",");// this has to be split and
+      String TAB_EXCLUDE_LIST[] = lPropertyReader.getProperty("TAB.EXCLUDE.LIST").toUpperCase().split(",");// this has to be split and
 
       boolean returnVal= true;
       if (!ALL_TAB_EXCLUDE_ENDS_WITH.equalsIgnoreCase(""))
@@ -587,8 +593,9 @@ public class ipurge extends idrive  {
                             lidTabs.getidTabbyTabName_pkName(fk.PKColumn.CON_TABLE, fk.PKColumn.field.getName())
                             );// get this from from Schema Clause
                 }*/
+
             lidTabs.SqlpreparedStat = "";
-            if ( itab.fktables.gettables().isEmpty())
+            if ( itab.fktables.gettables().isEmpty()) //  if there are no parent then do it; otherwise it will be done when its parent linegae was doen
             //for (fkTable fk: itab.dptables.gettables())
             {
 
@@ -612,10 +619,20 @@ public class ipurge extends idrive  {
         //else itab.= false
      }// end for
       /*
-        new lop thru the itabs and print the delete statement
+        new loop thru the itabs and print the delete statement
         get the last child; recurisevely thur all the way to the top level parents and see if that id can be deleted
         reason being if another child table row of the same parent may not qualify the parent's deletable status is set to false
        */
+
+      for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
+      //for(int j = 0; j <=lidTabs.getidtabs().size() - 1; j++)
+      { idTab it = lidTabs.getidtabs().get(j);
+          System.out.println(it.getName() + " Generating Delete statement ");
+          if (it.hasDelStatGenByAnotherParent==false) {
+           //   lidTabs.CanDeletableStatus_new(it);
+              //DeleteRows(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
+          }
+      }
 
       for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
       { idTab it = lidTabs.getidtabs().get(j);
@@ -625,6 +642,7 @@ public class ipurge extends idrive  {
               DeleteRows(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
+
       System.out.println(sStartTime + "\t " +  "End" + new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date()));
 
 
@@ -728,6 +746,7 @@ public class ipurge extends idrive  {
         String Sdeleet = "";
         String NOdeleet = "";
         String sids2del = "";
+        String slpkidsValue = "";
           String slamdaidsNOT2del ;
           String slamdaids2del;
 
@@ -741,10 +760,25 @@ public class ipurge extends idrive  {
             for (fkid fkid : tab.parentId_pkids.fkids()) {
                 for (ids pids : fkid.Pks) {
 
-                    if (pids.deleteable)
-                        Sdeleet = Sdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
-                    else
+                    if (pids.deleteable){
+                        slpkidsValue = pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+                        lidTabs.setCanNotDel2allParents(pids);
+                        // need another check if ids has been selected not to be deleted by another parent's  condition
+                        // but this won't work if there are table that are n+1 the level
+                        /*if (NOdeleet.contains(slpkidsValue))
+                           lidTabs.setCanNotDel2allParents(pids);
+                        else
+                            Sdeleet = Sdeleet + slpkidsValue;
+                            */
+                } else {
                         NOdeleet = NOdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+
+                        if  (pids.parIds !=null)// setting  grand parent rows to not deletable;
+                            pids.parIds.deleteable= false;
+                    }
+
+
+                    // upate the parent's
                     System.out.println(pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'")) + "Sdeleet =  " + Sdeleet);
                 }
 
@@ -806,7 +840,7 @@ public class ipurge extends idrive  {
 */
             dummy2 = map;
 
-            System.out.println("Sids " + sids2del + "dummy = " + dummy + " dummy 1= " + dummy1 + " dummy2 = " + dummy2);
+            System.out.println(" Sids " + sids2del + "dummy = " + dummy + " dummy 1= " + dummy1 + " dummy2 = " + dummy2);
         /*
         createa  prepared statement; exec deletes by batches of ~2000 --batch size; threads even though at db is will be queued; it will be kind of parallel -- ready for next batch
         createa  prepared statement; exec deletes by batches of ~2000 --batch size; threads even though at db is will be queued; it will be kind of parallel -- ready for next batch

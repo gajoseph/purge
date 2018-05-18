@@ -157,6 +157,15 @@ public class idTabs extends tfield {
     * */
 
 
+    public void setCanNotDel2allParents(ids chldids){
+        chldids.deleteable= false;
+        if (chldids.parIds !=null)
+            setCanNotDel2allParents(chldids.parIds);
+    }
+
+
+
+
     public idTab addTabData(idTab pidTab  ,contraintcolumn PKColumn,String sPkTabColName ,String sSchemaName  ,String sTabName
     ,int iCurrentDepth, String sFKTableColname, fkTable fkTab,  idTab objidTab )
     {
@@ -185,8 +194,6 @@ public class idTabs extends tfield {
             else
             {
                 System.out.print(" Query EMPTY");
-
-
             }
             while (objrsrecQry.next())
             {    // Set the header to print
@@ -212,9 +219,11 @@ public class idTabs extends tfield {
                     break;
 
                 if (pidTab != null)         // asscoiate the child rows
-                    if (!isDeleteAble)      //updateDeletableStatus(fkTab.PKColumn , objrsrecQry.getString("FK"), false);// need to update all the parents
-                        pids.deleteable= isDeleteAble;
-                        /*updateDeletableStatus( pidTab, objrsrecQry.getString("FK"), false, fkTab); */
+                    if (!isDeleteAble) {     //updateDeletableStatus(fkTab.PKColumn , objrsrecQry.getString("FK"), false);// need to update all the parents
+                        //pids.deleteable = isDeleteAble;
+                        setCanNotDel2allParents(pids);// we are setting all parents and grand parents as not deletable; added 05/18
+                    }
+                       /* updateDeletableStatus( pidTab, objrsrecQry.getString("FK"), false, fkTab); /*we had it before don't know why we chnaged */
 
             }
             boolean bsetLoadedFlagForFKCol = objidTab.setLoadedFlagForFKCol(fkTab);
@@ -237,7 +246,7 @@ public class idTabs extends tfield {
     }
 
     public idTab addTabs(
-            String sPkTabColName    /* primary Key of the table*/
+              String sPkTabColName    /* primary Key of the table*/
             , String sSchemaName    /* Schema Name*/
             , String sTabName       /* Table name */
             , idTab pidTab          /* parent table id to which child tables PKs are added into */
@@ -442,7 +451,7 @@ public class idTabs extends tfield {
                     for (ids id : fk1.Pks) {
                         if (id.deleteable == true)
                             if (id.parIds != null)
-                                CanChlPKDeletedbasedonParentFK_new(id, id.parIds  );//
+                                id.deleteable=CanChlPKDeletedbasedonParentFK_new(id, id.parIds  );//
                     }
                 }
         }
@@ -457,16 +466,23 @@ public class idTabs extends tfield {
     }
 
 
-    public void CanChlPKDeletedbasedonParentFK_new(ids ChldIDs, ids parIds ){
+    public boolean CanChlPKDeletedbasedonParentFK_new(ids ChldIDs, ids parIds ){
         /*
          * from the previous function we go the parent key; now traverse thru all the parents and see if it can be deleted */
         //idTab  Objparidtab=null;
         if (!parIds.isDeleteable()){
             ChldIDs.deleteable= false;
+            return false ;
         }
-        else // go recuroviles
-            if (parIds.parIds !=null)// reached top level
-                CanChlPKDeletedbasedonParentFK_new(ChldIDs, parIds.parIds  );
+        else { // go recuroviles
+            if (parIds.parIds != null) {// reached top level
+                ChldIDs.deleteable = CanChlPKDeletedbasedonParentFK_new(ChldIDs, parIds.parIds);
+                return ChldIDs.deleteable;
+            }
+            //else if no parent; reached top level; now spiraldownlaod if the deleted id false;not needed
+
+            return ChldIDs.deleteable;
+        }
 
     }
 

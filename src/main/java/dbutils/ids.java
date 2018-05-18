@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class ids extends tfield  implements Cloneable  {
     public String FkID= "";// needs to be list to accombimideate more than i parent key ???
-    public ids  parIds;
+    public ids  parIds;// holds
     public    boolean isDeleteable() {
         return deleteable;
     }
@@ -75,7 +75,6 @@ public class ids extends tfield  implements Cloneable  {
             else  {Pkids.add(ChldPkValue);
                     return false;
                     }
-
     }
 
     public boolean  checkPkvalueExits(String ChldPkValue){
