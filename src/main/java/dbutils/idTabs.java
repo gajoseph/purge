@@ -157,10 +157,19 @@ public class idTabs extends tfield {
     * */
 
 
-    public void setCanNotDel2allParents(ids chldids){
+    public void setCanNotDel2allParents(ids chldids, int level ){
         chldids.deleteable= false;
-        if (chldids.parIds !=null)
-            setCanNotDel2allParents(chldids.parIds);
+
+
+
+
+        if (chldids.parIds !=null) {
+            lSumBJCLogger.WriteOut(String.format("%s Setting deletable to false for %s and its children {%s}"
+                    ,(new String(new char[level]).replace("\0", "\t"))
+                    , chldids.FkID
+                    , chldids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"))));
+            setCanNotDel2allParents(chldids.parIds , level++);
+        }
     }
 
 
@@ -179,7 +188,10 @@ public class idTabs extends tfield {
         getPrepStatSQL(pidTab, PKColumn);// of the format (?,?,?,?):1,2,4,5,  not need to generate if the parent is same
         ssql = getDbFetch_Limit(sPkTabColName,sSchemaName, sTabName , pidTab, sFKTableColname, iCurrentDepth); // added limit in case we want to run in batches limit 10
         /* if the parent de4ons't have rows deletable then child alos can't be deleted */
-        System.out.println("Sql" + ssql );
+        lSumBJCLogger.WriteLog(String.format("Sql : %s", ssql ));
+
+
+
         try {
             _selStatement = objDBts.conn1.prepareStatement(ssql);
             objrsrecQry = _selStatement.executeQuery(); // get the data from child table
@@ -198,7 +210,8 @@ public class idTabs extends tfield {
             while (objrsrecQry.next())
             {    // Set the header to print
                 sPrintHeader = String.format("\n|%40s | %40s|", objrsrecQry.getString("PK"), objrsrecQry.getString("FK"));
-                System.out.print(sPrintHeader);
+                System.out.print(sPrintHeader); // need to remove every row printing
+
 
                 boolean isDeleteAble = objidTab.addidTab_ParPK_ChldPkids_frmrsRow(  objrsrecQry
                                                                                     , objDBts.objToSchema.gettable(sTabName)
@@ -221,7 +234,8 @@ public class idTabs extends tfield {
                 if (pidTab != null)         // asscoiate the child rows
                     if (!isDeleteAble) {     //updateDeletableStatus(fkTab.PKColumn , objrsrecQry.getString("FK"), false);// need to update all the parents
                         //pids.deleteable = isDeleteAble;
-                        setCanNotDel2allParents(pids);// we are setting all parents and grand parents as not deletable; added 05/18
+
+                        setCanNotDel2allParents(pids, 1);// we are setting all parents and grand parents as not deletable; added 05/18
                     }
                        /* updateDeletableStatus( pidTab, objrsrecQry.getString("FK"), false, fkTab); /*we had it before don't know why we chnaged */
 
@@ -439,7 +453,7 @@ public class idTabs extends tfield {
 
 
 
-    public boolean CanDeletableStatus_new(idTab chldTab ){
+    public boolean SetDeletableStatusBasedonParent(idTab chldTab ){
         /*
          * for a given idTab(most likesly child; check parIds which is is of parent's ids object check and see if it deletable; recursively go all the way to the top level
          * Parent could have mutiple childrens and after loading a child another child's records might not be able to delete and when that happens; parent's deletable status =false;)*/
@@ -586,4 +600,27 @@ public class idTabs extends tfield {
 
 
 
+
+    protected void finalize() throws Throwable {
+
+        try {
+
+            comfun.hasTabIdsRemovelst(this.idtabs);
+            this.idtabs.clear();
+            this.idtabs= null;
+//       super.finalize();
+
+        }
+        catch (Exception e ){
+
+        }
+        catch (Error e ){
+        }
+
+        finally {
+            super.finalize();     }
+    }
 }
+
+
+

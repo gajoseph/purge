@@ -50,8 +50,7 @@ public class fkid extends fkTable implements Cloneable {
                     lids.parIds  = new ids();
                     lids.parIds = pids ;
                     Pks.add(lids);// add to the list
-
-                    return lids;
+                   return lids;
             }
 
         } catch (Exception e) {

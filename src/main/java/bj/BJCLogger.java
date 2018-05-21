@@ -45,7 +45,11 @@ public class BJCLogger {
 
     public String  sTabPrint(String sContents, int iTabsize, String sTabLine, String Colsep  )
     {
-        return  printLine(iTabsize,sTabLine, Colsep )+ sContents + printLine(iTabsize,sTabLine, Colsep );
+        String a =  sContents;
+        a= a.replaceAll("\t", "    ");
+        return  printLine(a.length(),sTabLine, Colsep )
+                + sContents
+                + printLine(a.length(),sTabLine, Colsep );
 
     }
 
@@ -65,7 +69,7 @@ public class BJCLogger {
     }
 
 
-    private String _SYSTEM_OUT = "TRUE";
+    private boolean _SYSTEM_OUT = true ;
     private boolean _SYSTEM_LOG_OUT =   true;
     private boolean LOG_OUTPUT= true;// this is fpr debugging only. if false it won't write to log
     private String _fileFormat = "_yyyy_MM_dd__HH_mm_ss";
@@ -350,7 +354,7 @@ public class BJCLogger {
             output.write( aContents.replace("\n", "<br>") );
             /* Put a parameter and if this parameter is set only then print to the console. */
 
-            if (_SYSTEM_OUT.equals("TRUE"))
+            if (_SYSTEM_OUT)
                 System.out.println(aContents );
 
 
@@ -370,7 +374,7 @@ public class BJCLogger {
     }
 
     public void WriteLog_Info(String aContents) {
-        String old_SYSTEM_OUT="";
+        boolean  old_SYSTEM_OUT;
         try
         {
             if  (_SYSTEM_LOG_OUT==true)
@@ -378,7 +382,7 @@ public class BJCLogger {
             else
             {
                 old_SYSTEM_OUT = this._SYSTEM_OUT;
-                this._SYSTEM_OUT="FALSE";// temp flase
+                this._SYSTEM_OUT=false; // temp flase
                 setContents(_sFilename , "[LOG]\t"+aContents);
                 this._SYSTEM_OUT    = old_SYSTEM_OUT;
 
@@ -576,7 +580,7 @@ public class BJCLogger {
 
 
 
-    public void set_SYSTEM_OUT(String value){
+    public void set_SYSTEM_OUT(boolean value){
         _SYSTEM_OUT = value;
 
     }

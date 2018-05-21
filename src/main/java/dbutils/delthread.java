@@ -34,7 +34,8 @@ public class delthread extends Thread{
         //super(T);
         super(strName);
         //this.Rtype= ithread.runtype.JDBCBATCH;
-        System.out.println(strName + " starting! "  + pstrSql + "DFDDFD");
+        System.out.println("=========================" + getName() + "starting =========================");
+        System.out.println( pstrSql + "DFDDFD");
         iName = strName;
         sStartTs = new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
         //this.start();
@@ -80,7 +81,7 @@ public class delthread extends Thread{
         int successCount,notAavailable,failCount;
         successCount=notAavailable=failCount=0;
         try {
-            System.out.println("Inisde runJDBC");
+            System.out.println("Inside runJDBC");
 
             _insStatement.execute();//executeBatch();
             _connDest.commit();

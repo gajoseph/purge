@@ -139,8 +139,9 @@ public abstract class idrive extends  tfield{
         
         //lSumBJCLogger.set_fileFormat(Flname);
         lSumBJCLogger.set_fileType("html");
-        lSumBJCLogger.set_SYSTEM_OUT("TRUE");
-        lSumBJCLogger.setSYSTEM_LOG_OUT(false);
+
+        // reading from property files setSYSTEM_LOG_OUT
+
        
         }
         catch (FileNotFoundException e) 
