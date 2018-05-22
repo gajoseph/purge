@@ -1,4 +1,4 @@
-IPURGE
+<b>IPURGE</B>
 1) purge a database based on conditions -- based on last updated date or modified date -- which is customizable in the NLP.properties
 
 How the program works is assume this example 
