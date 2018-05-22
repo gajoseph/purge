@@ -5,16 +5,21 @@ is a cndidate to delete.
 ALL.TAB.FIELD.VALUE.FORMAT=yyyy-MM-dd
 ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are ready to be deleted.
 2. To skips table options starting w/ ending w/ containing **name** can be sepcified using properties in the property file 
-    ```ALL.TAB.EXCLUDE.ENDS.WITH=_LU
-    ALL.TAB.EXCLUDE.CONTAINS=
+    ```
     ALL.TAB.EXCLUDE.BEGIN.WITH=
+    ALL.TAB.EXCLUDE.ENDS.WITH=_LU
+    ALL.TAB.EXCLUDE.CONTAINS=
     TAB.EXCLUDE.LIST=A,tab12
 ```
-3. Also, can supply a list of , separated  table names to exclude; see property <u>TAB.EXCLUDE.LIST</u>
-4. Option to specify custom filters for tables 
-    *  CUSTOM.TAB.FILTER.FILE.NAME= `path_to_filenamethatcontainscustomerfiltersforatable`
-    *  example `tab3,updt_timestmp,2018-04-19,AND 1<>1`
-  
+3. To skip a list of tables
+    ```
+    TAB.EXCLUDE.LIST=A,tab12
+    ```
+4. To specify custom filters for some/ all tables 
+    ``` 
+    CUSTOM.TAB.FILTER.FILE.NAME= `path_to_filenamethatcontainscustomerfiltersforatable`
+        example: tab3,updt_timestmp,2018-04-19,AND 1<>1
+  ```
 ### How the program works is as follows  
 
 <hr>
