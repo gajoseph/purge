@@ -40,12 +40,12 @@ In the above picture the tables can be broadly classified as level0,1 2..Leveln 
     Level 2 child table/s are: tab4 Child of (tab3, tab2)
     ```
    
-1. Process take the eligibale rows from tab1, in this case top level parent; fetches only {n} of rows sepcified in property  **ALL.TAB.BATCH.SIZE=10** 
-2. Then, associated rows from child tables are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <= **ALL.TAB.FIELD.VALUE=2018-04-22**; till it covers all the child tables; 
+1. Program deletes the rows in a table in bacthes. Batch size is set via **ALL.TAB.BATCH.SIZE**. The program take the eligibale rows from tab1, in this case top level parent; and  fetches only {n} of rows sepcified in property  **ALL.TAB.BATCH.SIZE=10** 
+2. Then, associated rows from child tables are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <= **ALL.TAB.FIELD.VALUE=2018-04-22**; and continues until it covers all the child tables; 
 2. If child rows are not eligible to delete; process will **recursively update all associated parent rows and set the status as not deletable**; this is the upward process 
 3. once all the eligible rows are collected; its starts deleting from bottom level up to top level-- it also check if the child rows can be deleted based on a linked to parent key id. 
 4. the deletes are fired by spinning up threads from a thread pool of 3 – is configurable. not done 
-5. Once the 1st batch of data is deleted; program repeats setp {1..4} till all the rows are deleted.
+5. Once the 1st batch of data is deleted; program repeats steps {1..4} in the next batch/s till all the rows are deleted.
 
 ### Use case:: 
 1)	if a row in tab12 is updated w/ todays date its parent row in tab1 can’t be deleted; 
