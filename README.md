@@ -23,7 +23,7 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
 5. To sepcify custom join for tables 
     ```
     CUSTOM.TAB.JOIN.FILE.NAME= `path_to_fileContainingcustomjoins`
-    tab5,tab2col1,tab2,tab2col1 **column tab2col1 in tab5 is joined to tab2col2 in tab2**
+        example: tab5,tab2col1,tab2,tab2col1 **column tab2col1 in tab5 is joined to tab2col2 in tab2**
     ```
 ### How the program works is as follows  
 
