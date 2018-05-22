@@ -1,6 +1,6 @@
 ## iPURGE
-This program automatically purges(deletes) data in a database.The data is purged based on a how old it is. Retention of data is based on condition applied to last updated date / last modified data field/column in a table. If table row meets the conidtion then it 
-is a cndidate to delete. 
+This program automatically purges(deletes) data in a database.The purged done based on how old the data is. Retention of data is based on condition applied to last updated date / last modified data field/column in a table. When a row in a table meets the condition then it is selected for deletion. After that other rules are also applied before it is finally deleted
+
 1. To apply the condition set the property`ALL.TAB.FIELD`; for example `ALL.TAB.FIELD=updt_timestmp` means all the table has an updt_timestmp and `ALL.TAB.FIELD.VALUE=2018-04-22
 ALL.TAB.FIELD.VALUE.FORMAT=yyyy-MM-dd
 ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are ready to be deleted.
@@ -20,6 +20,11 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
     CUSTOM.TAB.FILTER.FILE.NAME= `path_to_filenamethatcontainscustomerfiltersforatable`
         example: tab3,updt_timestmp,2018-04-19,AND 1<>1
     ```
+5. To sepcify custom join for tables 
+    ```
+    CUSTOM.TAB.JOIN.FILE.NAME=E:/java/dbpurge/src/main/resources/customJoin.txt
+    tab5,tab2col1,tab2,tab2col1 ** column tab2col1 in tab5 is joined to tab2col2 in tab2 **
+    ```
 ### How the program works is as follows  
 
 <hr>
@@ -28,11 +33,11 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
 </p>
 <hr>
 <br>
-
-<b>Level 0 table are:</b> tab1 <br>
-<b>Level 1 child tables are:</b> tab12, tab2, tab3 <br>
-<b>Level 2 child table/s are:</b> tab4 Child of (tab3, tab2)<br>
-
+In the above picture the tables can be broadly classified as level0..n level 0 being the top level parent and level 1, the next child and so on. In this example:
+```Level 0 table are: tab1 
+Level 1 child tables are: tab12, tab2, tab3 
+Level 2 child table/s are: tab4 Child of (tab3, tab2)
+```
 1) Process take the eligibale rows from tab1, top level paarent; fecthes only rows sepcified in property  <u>ALL.TAB.BATCH.SIZE=10 </u>; 
 2) Then, associated rows from child tables  are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <= <u>ALL.TAB.FIELD.VALUE=2018-04-22 </u>); till it covers all the child tables; 
 2) If child rows are not eligible to delete; process will recursively update all associated parent rows and set the status as not deletable; this is the upward process 
