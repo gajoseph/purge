@@ -28,9 +28,11 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
 ### How the program works is as follows  
 
 ----
+
 <p align="left">
   <img src="https://github.com/gajoseph/purge/blob/master/testschemaER.jpg" width="700"/>
 </p>
+
 ----
 
 In the above picture the tables can be broadly classified as level0,1 2..Leveln tables where level 0 being the top level table meaning these are not dependant on any other table and level 1 the next child of level 0 table and so on.Listed below are tables by their levels
