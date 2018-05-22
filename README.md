@@ -10,7 +10,7 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
     ALL.TAB.EXCLUDE.ENDS.WITH=_LU
     ALL.TAB.EXCLUDE.CONTAINS=
     TAB.EXCLUDE.LIST=A,tab12
-```
+    ```
 3. To skip a list of tables
     ```
     TAB.EXCLUDE.LIST=A,tab12
@@ -19,7 +19,7 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
     ``` 
     CUSTOM.TAB.FILTER.FILE.NAME= `path_to_filenamethatcontainscustomerfiltersforatable`
         example: tab3,updt_timestmp,2018-04-19,AND 1<>1
-  ```
+    ```
 ### How the program works is as follows  
 
 <hr>
