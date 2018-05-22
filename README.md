@@ -8,10 +8,11 @@ How the program works is as follows
   <img src="https://github.com/gajoseph/purge/blob/master/testschemaER.jpg" width="700"/>
 </p>
 <hr>
+<br>
 
-Level 0 table are: tab1 
-Level 1 child tables are : tab12, tab2, tab3
-Level 2 child table/s are : tab4 Child of (tab3, tab2)
+Level 0 table are: tab1 <br>
+Level 1 child tables are : tab12, tab2, tab3 <br>
+Level 2 child table/s are : tab4 Child of (tab3, tab2)<br>
 
 1) Process take the eligibale rows from tab1, top level paarent; fecthes only rows sepcified in property ALL.TAB.BATCH.SIZE=10; 
 2) Then, associated rows from child tables  are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <=ALL.TAB.FIELD.VALUE=2018-04-22); till it covers all the child tables; 
@@ -19,7 +20,7 @@ Level 2 child table/s are : tab4 Child of (tab3, tab2)
 3) once all the eligible rows are collected; its starts deleting from bottom level to level up—it also check if the child rows can be deleted based on a linked to parent key id 
 4) the deletes are fired by spinning up threads froma thread pool of 3 – is configurable 
 
-Use case 
+<b>Use case:: </b>
 1)	if a row in tab12 is updated w/ todays date its parent row in tab1 can’t be deleted; 
 2)	tab1's child rows in tab2 and tab3 can't be deleted
 3)	if one child row is not deleted able then the common parent can’t be deleted 
