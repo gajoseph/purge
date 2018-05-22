@@ -33,20 +33,20 @@ ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are re
 </p>
 ----
 
-In the above picture the tables can be broadly classified as level0,1 2..Leveln tables where level 0 being the top level table meaning these are not dependant on any other table and level 1 the next child of level 0 table and so on.Listed below are tables by their levels 
-    ```
+In the above picture the tables can be broadly classified as level0,1 2..Leveln tables where level 0 being the top level table meaning these are not dependant on any other table and level 1 the next child of level 0 table and so on.Listed below are tables by their levels
+    ```   
     Level 0 table are: tab1 
-    Level 1 child tables are: tab12, tab2, tab3 
+    Level 1 child tables are: tab12, tab2, tab3
     Level 2 child table/s are: tab4 Child of (tab3, tab2)
     ```
+   
+1. Process take the eligibale rows from tab1, in this case top level paarent; fecthes only # of rows sepcified in property  **ALL.TAB.BATCH.SIZE=10** 
+2. Then, associated rows from child tables are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <= **ALL.TAB.FIELD.VALUE=2018-04-22**; till it covers all the child tables; 
+2. If child rows are not eligible to delete; process will **recursively update all associated parent rows and set the status as not deletable**; this is the upward process 
+3. once all the eligible rows are collected; its starts deleting from bottom level up to top level-- it also check if the child rows can be deleted based on a linked to parent key id. 
+4. the deletes are fired by spinning up threads from a thread pool of 3 – is configurable. not done 
 
-1. Process take the eligibale rows from tab1, top level paarent; fecthes only rows sepcified in property  <u>ALL.TAB.BATCH.SIZE=10 </u>; 
-2. Then, associated rows from child tables  are pulled for example (tab1.col1 = tab12.tab1col1) or (tab12.tab1col1 is null or updatedatetime <= <u>ALL.TAB.FIELD.VALUE=2018-04-22 </u>); till it covers all the child tables; 
-2. If child rows are not eligible to delete; process will recursively update all associated parent rows and set the status as not deletable; this is the upward process 
-3. once all the eligible rows are collected; its starts deleting from bottom level to level up—it also check if the child rows can be deleted based on a linked to parent key id 
-4. the deletes are fired by spinning up threads froma thread pool of 3 – is configurable 
-
-<b>Use case:: </b>
+### Use case:: 
 1)	if a row in tab12 is updated w/ todays date its parent row in tab1 can’t be deleted; 
 2)	tab1's child rows in tab2 and tab3 can't be deleted
 3)	if one child row is not deleted able then the common parent can’t be deleted 
