@@ -52,5 +52,5 @@ In the above picture the tables can be broadly classified as level0,1 2..Leveln 
 2)	tab1's child rows in tab2 and tab3 can't be deleted
 3)	if one child row is not deleted able then the common parent can’t be deleted 
 4)	Also, tab4 has 2 parent tables; a row in tab4 that has a parent row in tab2  and can't be deleted; then the other parent ie tab3 row cannot be also deleted;
-5)	Also, the parent rows all all the way top can't be deleted as well as  all the child rows associated w/ each parent
+5)	Also, all in rows in the parent tbales  all the way to top level 0 can't be deleted as well as  all the child rows associated w/ each parent row.
 
