@@ -1,7 +1,21 @@
-<b>IPURGE</B>
-1) purge a database based on conditions -- based on last updated date or modified date -- which is customizable in the NLP.properties
-
-How the program works is as follows  
+## iPURGE
+This program automatically purges(deletes) data in a database.The data is purged based on a how old it is. Retention of data is based on condition applied to last updated date / last modified data field/column in a table. If table row meets the conidtion then it 
+is a cndidate to delete. 
+1. To apply the condition set the property`ALL.TAB.FIELD`; for example `ALL.TAB.FIELD=updt_timestmp` means all the table has an updt_timestmp and `ALL.TAB.FIELD.VALUE=2018-04-22
+ALL.TAB.FIELD.VALUE.FORMAT=yyyy-MM-dd
+ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are ready to be deleted.
+2. To skips table options starting w/ ending w/ containing **name** can be sepcified using properties in the property file 
+    ```ALL.TAB.EXCLUDE.ENDS.WITH=_LU
+    ALL.TAB.EXCLUDE.CONTAINS=
+    ALL.TAB.EXCLUDE.BEGIN.WITH=
+    TAB.EXCLUDE.LIST=A,tab12
+```
+3. Also, can supply a list of , separated  table names to exclude; see property <u>TAB.EXCLUDE.LIST</u>
+4. Option to specify custom filters for tables 
+    *  CUSTOM.TAB.FILTER.FILE.NAME= `path_to_filenamethatcontainscustomerfiltersforatable`
+    *  example `tab3,updt_timestmp,2018-04-19,AND 1<>1`
+  
+### How the program works is as follows  
 
 <hr>
 <p align="left">
