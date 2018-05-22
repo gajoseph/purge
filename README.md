@@ -2,11 +2,11 @@
 This program automatically purges(or deletes) data in a database.The purge is done based on how old the data is. Retention of data is based on conditions applied to last updated date or the last modified data field/column in given table. When a row in a table meets the condition then it is selected for deletion. After that other rules are applied before it is finally deleted from the table.
 
 1. To apply the condition set the property`ALL.TAB.FIELD`; for example `ALL.TAB.FIELD=updt_timestmp` means all the table has an updt_timestmp and 
-```
+    ```
     ALL.TAB.FIELD.VALUE=2018-04-22
     ALL.TAB.FIELD.VALUE.FORMAT=yyyy-MM-dd
     ALL.TAB.FIELD.COMP.OPR=<=` and all rows with update_timestmp <=2018-04-22 are ready to be deleted.
-```       
+    ```       
 2. To skip table/s starting w/ or ending w/ or containing **ketword** can be implemented using the following properties in the property file 
     ```
     ALL.TAB.EXCLUDE.BEGIN.WITH=DIM
