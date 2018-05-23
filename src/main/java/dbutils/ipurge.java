@@ -57,9 +57,11 @@ public class ipurge extends idrive  {
     public String qlikTableSchemaName4qvs = "";
     idTabs lidTabs ;
     boolean bgofornextbatch = false ;
-    
-    
-    
+    ExecutorService executor = null; // moved here from deleterows
+
+
+
+
     public  String sFilespearatot; // = System.getProperty("file.separator");
     public  String sFullOutFilename;// = this.qlikProj+ sFilespearatot + this.qlikLoadScriptName;
     public  String sFullOutPath;// = this.qlikProj+ sFilespearatot + this.qlikLoadScriptName;
@@ -570,7 +572,9 @@ public class ipurge extends idrive  {
    String strInsSql = "";
    String sStartTime = "";
    String WhereClause = "";
-    if (objDBts.objFrmSchema==null)
+
+
+      if (objDBts.objFrmSchema==null)
       getTabBySchema(qlikTableSchemaName4qvs, qlikTableSchemaName4qvs, qlikTableName4qvs);
       //
       lSumBJCLogger.setSYSTEM_LOG_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT")));
@@ -615,6 +619,8 @@ public class ipurge extends idrive  {
               setDeleteFlags(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
+      executor = Executors.newFixedThreadPool(3);
+
 
       for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
       { idTab it = lidTabs.getidtabs().get(j);
@@ -625,6 +631,14 @@ public class ipurge extends idrive  {
           }
       }
       lSumBJCLogger.WriteOut(String.format(" Start : %s \t %End:%s"              ,sStartTime ,new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date()) ));
+
+      executor.shutdown();
+      try {
+          executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+      } catch (InterruptedException e) {
+          _iErrDesc = "executor.awaitTermination!!!!!!!! :: " + e.getCause() + "\n" + e.getMessage();
+          System.out.println("\n:" + _iErrDesc);
+      }
 
   }
   
@@ -798,9 +812,7 @@ public class ipurge extends idrive  {
 
        // final StringBuilder slamdaidsNOT2del = new StringBuilder();
          //String slamdaids2del = new StringBuilder();
-        ExecutorService executor = null;
         try {
-            executor = Executors.newFixedThreadPool(3);
 
             delthread t1;
             for (fkid fkid : tab.parentId_pkids.fkids()) {
@@ -931,13 +943,6 @@ public class ipurge extends idrive  {
 //				    lSumBJCLogger.WriteErrorStack("getReportDetails " ,e ) ;
 
         } finally {
-            executor.shutdown();
-            try {
-                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            } catch (InterruptedException e) {
-                _iErrDesc = "executor.awaitTermination!!!!!!!! :: " + e.getCause() + "\n" + e.getMessage();
-                System.out.println("\n:" + _iErrDesc);
-            }
 
         }
 
