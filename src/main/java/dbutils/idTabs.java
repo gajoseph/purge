@@ -1,5 +1,6 @@
 package dbutils;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -9,11 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.io.IOException;
 
-import static dbutils.idrive.lSumBJCLogger;
 import static dbutils.idrive.lPropertyReader;
+import static dbutils.idrive.lSumBJCLogger;
 import static dbutils.ipurge.objDBts;
 
 public class idTabs extends tfield {
@@ -36,7 +35,7 @@ public class idTabs extends tfield {
                 Filterlines = Files.readAllLines(Paths.get(lPropertyReader.getProperty("CUSTOM.TAB.FILTER.FILE.NAME")));
         }
         catch (IOException e) {
-            System.out.println(e);
+            //System.out.println(e);
             lSumBJCLogger.WriteErrorStack( this.getClass().getName() ,e );
         }
 

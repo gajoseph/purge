@@ -129,7 +129,7 @@ public class ithread extends Thread {
            
         } catch (BatchUpdateException buex) {
             buex.printStackTrace();
-            System.out.println(buex);
+            //System.out.println(buex);
             int[] updateCounts = buex.getUpdateCounts();
             for (int i = 0; i < updateCounts.length; i++) {
                 if (updateCounts[i] >= 0) {

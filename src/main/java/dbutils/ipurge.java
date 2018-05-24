@@ -550,7 +550,8 @@ public class ipurge extends idrive  {
            }
        }
             catch (IOException e) {
-            System.out.println(e);
+            //System.out.println(e)
+                lSumBJCLogger.WriteErrorStack("", e);
             }
       catch (Throwable ex) {
           //Logger.getLogger(this.getClass().getName().log(Level.SEVERE, null, ex));
