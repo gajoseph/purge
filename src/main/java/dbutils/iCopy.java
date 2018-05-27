@@ -19,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static dbutils.idrive.lSumBJCLogger;
 import static dbutils.idrive.lPropertyReader;
 import static dbutils.idrive.lSumBJCLogger;
 import java.sql.DatabaseMetaData;
@@ -130,7 +129,7 @@ public class iCopy extends idrive {
                 );
             }
 
-            rstables = ((com.ibm.db2.jcc.DB2DatabaseMetaData) dbmd).getCatalogs();
+            rstables = dbmd.getCatalogs();
             while (rstables.next()) {
 
                 lSumBJCLogger.WriteLog("Cat = " + rstables.getString(1)
@@ -154,7 +153,7 @@ public class iCopy extends idrive {
 
     }
 
-    public void GetDBPostgresmeta(String strFrmSchema, String strtoSchema) throws SQLException {
+    public void GetDBPostgresmeta(String strFrmSchema, String strtoSchema) {
         try {
             lSumBJCLogger.WriteLog("Source conn1");
             getTabBySchema(strFrmSchema, strtoSchema);
@@ -226,7 +225,7 @@ public class iCopy extends idrive {
     }
 
     @Override
-    void setDbConnection() throws Exception {
+    void setDbConnection() {
 
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -237,12 +236,12 @@ public class iCopy extends idrive {
     }
 
     @Override
-    void sqlDbConnection() throws Exception {
+    void sqlDbConnection() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    protected void _updateFillerInfo(LinkedHashMap HL7Msg) throws Exception {
+    protected void _updateFillerInfo(LinkedHashMap HL7Msg) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -296,7 +295,7 @@ public class iCopy extends idrive {
             sTime = sTime + ": adding to batch =" + new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
             // add to batch
             _insStatement.addBatch();
-            if ((int) rowCount % DES_DB_BATCH_SIZE == 0) {
+            if (rowCount % DES_DB_BATCH_SIZE == 0) {
                 _insStatement.executeBatch();
                 objDesloc._conn.commit();
                 _insStatement.clearBatch();

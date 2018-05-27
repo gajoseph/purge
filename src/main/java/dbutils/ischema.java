@@ -6,13 +6,8 @@
 package dbutils;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import static dbutils.idrive.lSumBJCLogger;
-import java.sql.ResultSet;
 
 /**
  *
@@ -71,10 +66,7 @@ public itable TableByName( String TabName ){
                           .filter(u -> u.getName().equalsIgnoreCase(TabName)
                                   )
                                   .findFirst();
-  if (t.isPresent())    
-      return t.get();
-  else return                   
-      new itable();
+    return t.orElseGet(itable::new);
 }
     
     public itable AddTable(String TabName, String TabType, itable itab) {
@@ -110,8 +102,7 @@ public itable TableByName( String TabName ){
        Optional<itable>  t= tabList.stream()
                         .filter(u -> u.getName().equalsIgnoreCase(tabName))
                             .findFirst();
-        if (t.isPresent())    return t.get();
-        else return                   new itable();
+        return t.orElseGet(itable::new);
        
         
 
@@ -131,7 +122,7 @@ public itable TableByName( String TabName ){
        this.tabList = null;
         super.finalize();     
     }
-     protected void print() throws Throwable {
+     protected void print() {
     	//comfun.print(this._tabByName, tabcount);
         
     }

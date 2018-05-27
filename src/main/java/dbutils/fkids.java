@@ -3,7 +3,6 @@ package dbutils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static dbutils.idrive.lSumBJCLogger;
 
@@ -38,10 +37,7 @@ public class fkids {
                 )
                 .findFirst();
 
-        if (t.isPresent())
-            return true;
-        else
-            return false ;
+        return t.isPresent();
     }
 
 
@@ -182,10 +178,7 @@ public class fkids {
                         && u.PKColumn.CON_SCHEMA.equalsIgnoreCase(fk.PKColumn.CON_SCHEMA)
                         ).findFirst();
 
-        if (t.isPresent())
-            return true;
-        else
-            return false ;
+        return t.isPresent();
 
     }
 
@@ -196,10 +189,7 @@ public class fkids {
                         && u.PKColumn.CON_SCHEMA.equalsIgnoreCase(sParentSchemaName)
                 ).findFirst();
 
-        if (t.isPresent())
-            return true;
-        else
-            return false ;
+        return t.isPresent();
 
     }
 

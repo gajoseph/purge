@@ -108,8 +108,10 @@ public class fkTables {
                             .findFirst();
     */
         Optional<fkTable> t = gettable(fktab.PKColumn.CON_TABLE, fktab.PKColumn.CON_SCHEMA);
-        if (t.isPresent()) return t.get();
-        else return new fkTable(fktab);
+        return t.orElseGet(() -> new fkTable(fktab));
+        /*
+        * if (t.isPresent()) return t.get();
+        else return new fkTable(fktab);*/
 
     }    
     

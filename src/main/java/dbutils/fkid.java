@@ -3,7 +3,6 @@ package dbutils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class fkid extends fkTable implements Cloneable {
 
@@ -35,11 +34,11 @@ public class fkid extends fkTable implements Cloneable {
     }
 
 
-    private ids Fk_pks(String fkvalue, ids pids ) throws Throwable  {
+    private ids Fk_pks(String fkvalue, ids pids ) {
 
         try {
 
-            Optional<ids> t =   Pks.stream().filter(e -> ((ids) e).FkID.equalsIgnoreCase(fkvalue)).findFirst();
+            Optional<ids> t =   Pks.stream().filter(e -> e.FkID.equalsIgnoreCase(fkvalue)).findFirst();
 
             if (t.isPresent()) {
                 return t.get();

@@ -7,7 +7,6 @@
 package dbutils;
 import java.lang.*;
 import java.sql.DatabaseMetaData;
-import java.sql.JDBCType;
 import java.util.*;
 import dbutils.dbtype;
 
@@ -152,10 +151,9 @@ public boolean hassqlkeywords(String Name ){
      Optional<String>  t= Arrays.asList(REV_WORDS).stream()
             .filter(a -> a.toString().equalsIgnoreCase(Name))
             .findFirst();
-      if (t.isPresent())    
-            return true;
-        else return                   
-             false;
+    return t.isPresent();
+
+
 
 }
   

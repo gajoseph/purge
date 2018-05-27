@@ -16,7 +16,6 @@ package bj;
  */
 import java.io.*;
 import java.util.*;
-import java.text.*;
 import java.lang.StackTraceElement;
 import java.lang.String;
 import java.util.logging.Level;
@@ -106,7 +105,7 @@ public class BJCLogger {
 
 
 
-    public BJCLogger(String sFlName, String sOutputfile) throws FileNotFoundException, IOException {
+    public BJCLogger(String sFlName, String sOutputfile) throws IOException {
         if (sFlName.equals(""))      throw new IllegalArgumentException("File Name cannotbe null.");
         _sFilename = sFlName;
         _sOutputFilename = sOutputfile;
@@ -174,7 +173,7 @@ public class BJCLogger {
     }
 
 
-    public BJCLogger(String sFlName, String sOutputfile, String spCommentBlock ) throws FileNotFoundException, IOException {
+    public BJCLogger(String sFlName, String sOutputfile, String spCommentBlock ) throws IOException {
         if (sFlName.equals(""))      throw new IllegalArgumentException("File Name cannotbe null.");
         _sFilename = sFlName;
         _sOutputFilename = sOutputfile;
@@ -248,7 +247,7 @@ public class BJCLogger {
 
 
 
-    public BJCLogger(String sFlName) throws FileNotFoundException, IOException {
+    public BJCLogger(String sFlName) throws IOException {
         if (sFlName == "")      throw new IllegalArgumentException("File Name cannotbe null.");
         _sFilename = sFlName;
 
@@ -290,7 +289,7 @@ public class BJCLogger {
     }
 
     private  void   setOutContents(String _sFilename, String aContents )
-            throws FileNotFoundException, IOException {
+            throws IOException {
 
         if (_sFilename == "")   throw new IllegalArgumentException("File Name cannotbe null.");
 
@@ -327,11 +326,9 @@ public class BJCLogger {
 
     //-------------------------------------------------------------------------------------------------
     private  void   setContents(String _sFilename, String aContents )
-            throws FileNotFoundException, IOException {
+            throws IOException {
 
         if (_sFilename == "")   throw new IllegalArgumentException("File Name cannotbe null.");
-
-
 
         //declared here only to make visible to finally clause; generic reference
         Writer output = null;
@@ -340,16 +337,15 @@ public class BJCLogger {
         SwitchLogfile();
 
         try {
-
             output = new BufferedWriter( new FileWriter(_objFile, true)  );
             aContents = printDate() +_PrintLineno() + aContents ;
-
 
 
             if (_fileType.indexOf("html") >=0 )
                 output.write( "<br>" + System.getProperty("line.separator"));
             else
                 output.write( System.getProperty("line.separator") );
+
 
             output.write( aContents.replace("\n", "<br>") );
             /* Put a parameter and if this parameter is set only then print to the console. */
@@ -377,7 +373,7 @@ public class BJCLogger {
         boolean  old_SYSTEM_OUT;
         try
         {
-            if  (_SYSTEM_LOG_OUT==true)
+            if  (_SYSTEM_LOG_OUT)
                 setContents(_sFilename , "[LOG]\t"+aContents);
             else
             {

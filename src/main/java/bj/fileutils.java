@@ -11,12 +11,7 @@ package bj;
  */
 
 import java.io.*;
-import java.util.*;
-import java.text.*;
-import java.lang.StackTraceElement;
 import java.lang.String;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.nio.channels.FileChannel;
 
 
@@ -76,7 +71,7 @@ public  class fileutils {
     }
 
     
-    public static  void appendFile (String sFlName, String sOutputfile, String sBkupFileNamePrefix) throws FileNotFoundException, IOException {
+    public static  void appendFile (String sFlName, String sOutputfile, String sBkupFileNamePrefix) throws IOException {
             if (sFlName.equals(""))      throw new IllegalArgumentException("File Name cannotbe null.");
                  
             File  _objSrcFile   = new File(sFlName);

@@ -5,9 +5,6 @@
  */
 package dbutils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  *
  * @author tgaj2

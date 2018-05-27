@@ -426,7 +426,6 @@ public class idTabs extends tfield {
                 lSumBJCLogger.WriteErrorStack("Throwable From FieldByName", throwable);
 
 
-                ;
             }
         }
 
@@ -462,7 +461,7 @@ public class idTabs extends tfield {
             if (chldTab !=null)
                 for (fkid fk1: chldTab.parentId_pkids.fkids()) {
                     for (ids id : fk1.Pks) {
-                        if (id.deleteable == true)
+                        if (id.deleteable)
                             if (id.parIds != null)
                                 id.deleteable=CanChlPKDeletedbasedonParentFK_new(id, id.parIds  );//
                     }
@@ -490,6 +489,9 @@ public class idTabs extends tfield {
         else { // go recuroviles
             if (parIds.parIds != null) {// reached top level
                 ChldIDs.deleteable = CanChlPKDeletedbasedonParentFK_new(ChldIDs, parIds.parIds);
+                if (!ChldIDs.deleteable )
+                    System.out.println( parIds.FkID + "is false  so these childs are false "
+                            +parIds.Pkids.toString()  + " \nChldIDs = " + ChldIDs.FkID + "\tChldIDs.Pkids" + ChldIDs.Pkids.toString() );
                 return ChldIDs.deleteable;
             }
             //else if no parent; reached top level; now spiraldownlaod if the deleted id false;not needed
@@ -505,8 +507,7 @@ public class idTabs extends tfield {
         Optional<idTab>  t= idtabs.stream()
                 .filter(u -> u.getName().equalsIgnoreCase(tabName))
                 .findFirst();
-        if (t.isPresent())    return t.get();
-        else return                   null;
+        return t.orElse(null);
 
     }
 
@@ -580,7 +581,7 @@ public class idTabs extends tfield {
                 for (fkid fk1: chldTab.parentId_pkids.fkids()) {
                     Objparidtab = getidTabByPkColumn(fk1.PKColumn);
                     for (ids id : fk1.Pks) {
-                        if (id.deleteable == true)
+                        if (id.deleteable)
                             if (fk1.PKColumn.CON_TABLE != "null")
                                 CanChlPKDeletedbasedonParentFK(id.FkID, fk1.PKColumn, id, Objparidtab);// call this which is reset so i will have to check again if its still true then delete
 

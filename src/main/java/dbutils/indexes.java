@@ -95,10 +95,7 @@ public class indexes {
                                 .filter(u -> u.getName().equalsIgnoreCase(idxName)
                                         )
                                         .findFirst();
-        if (t.isPresent())    
-            return t.get();
-        else return                   
-            new iindex();
+          return t.orElseGet(iindex::new);
     }
 
      
@@ -109,10 +106,7 @@ public class indexes {
                                 .filter(u -> u.getName().equalsIgnoreCase(idxName)
                                         )
                                         .findFirst();
-        if (t.isPresent())    
-            return true;
-        else 
-            return false;
+        return t.isPresent();
     
     
     }

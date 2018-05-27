@@ -5,7 +5,6 @@
  */
 package dbutils;
 
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -31,7 +30,7 @@ public class comfun {
 
     }
 
-    public static Object returnFromHashTab(String searchName, Hashtable _tabByName ) throws  Throwable    {
+    public static Object returnFromHashTab(String searchName, Hashtable _tabByName ) {
        Object obj=null;
 
         try {
@@ -92,7 +91,7 @@ public class comfun {
                     + " Count " +tabList.size() + " fld:" + next.getFieldcount()
                     );
             next.tabFields.forEach((key)->{
-                lSumBJCLogger.WriteLog(" "+ ((tfield)key).getName() + " " );
+                lSumBJCLogger.WriteLog(" "+ key.getName() + " " );
            
             }
             );
@@ -207,8 +206,8 @@ public class comfun {
     
     
      
-    protected static void hasTabRemove(Hashtable _Hash, int hashcount) throws Throwable {
-        tfield l ;
+    protected static void hasTabRemove(Hashtable _Hash, int hashcount) {
+
         String s = "";
         
 
@@ -245,7 +244,7 @@ public class comfun {
 
 
 
-    protected static void print(Hashtable _Hash, int hashcount) throws Throwable {
+    protected static void print(Hashtable _Hash, int hashcount) {
     String s = "";
     int i = 0;
        try {

@@ -16,7 +16,6 @@ package dbutils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -126,7 +125,7 @@ public abstract class idrive extends  tfield{
         _ichild = new tfield();//-- creating a default child 
         String Flname = this.getClass().getName() + "_Log_" ;
         
-        this.lPropertyReader = PropertyReader.getPropInstance();
+        lPropertyReader = PropertyReader.getPropInstance();
         
         //this.lPropertyReader.setProperty("LOG.PATH", "c:/testing/");
         

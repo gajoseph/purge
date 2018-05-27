@@ -34,8 +34,7 @@ public class utable{
       Optional<fkTable>  t= fkTables.stream()
                         .filter(u -> u.getName().equalsIgnoreCase(name))
                             .findFirst();
-        if (t.isPresent())    return t.get();
-        else return                   new fkTable();
+         return t.orElseGet(fkTable::new);
     
      }
     

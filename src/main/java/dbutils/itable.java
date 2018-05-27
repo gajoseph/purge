@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import static dbutils.idrive.lSumBJCLogger;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  *
@@ -23,15 +22,17 @@ public class itable extends tfield implements NewInterface {
     protected List<tfield> tabFields;
      //    private List<tfield> idxfields;
 
-    public int ID;
+    // --Commented out by Inspection (5/24/2018 9:33 AM):public int ID;
 
     public int getFieldcount() {
         return fieldcount;
     }
 
-    public void setFieldcount(int fieldcount) {
-        this.fieldcount = fieldcount;
-    }
+// --Commented out by Inspection START (5/24/2018 9:33 AM):
+//    public void setFieldcount(int fieldcount) {
+//        this.fieldcount = fieldcount;
+//    }
+// --Commented out by Inspection STOP (5/24/2018 9:33 AM)
     protected int fieldcount;
 
     private dbtype.db _dbType;
@@ -40,7 +41,6 @@ public class itable extends tfield implements NewInterface {
 
     public boolean isvalid = true;
     public String Grants = "";
-    public String IndexDDL = "";
     public String PKDDL = "";
     public String PK_NAME = "";
     public String OwnerName = "";
@@ -400,7 +400,7 @@ static boolean isInt(String s)
     
     
     
-    protected tfield FieldByName(String FldName) throws Throwable {
+    protected tfield FieldByName(String FldName) {
         /* return the field by name 
          */
         try {
@@ -437,7 +437,7 @@ static boolean isInt(String s)
         for (tfield tfld : getfields())
         {
             
-            newName= (hassqlkeywords(tfld.getName())==true)? ('"' +   tfld.getName() + '"') :  tfld.getName() ;
+            newName= (hassqlkeywords(tfld.getName()))? ('"' +   tfld.getName() + '"') :  tfld.getName() ;
             //strInsSql = strInsSql + tfld.getName() + ",";
             strInsSql = strInsSql + newName + ",";
             straparams = straparams + "?,";
@@ -498,7 +498,7 @@ static boolean isInt(String s)
      List<String> FKSQL=
     
         tabFields.stream()
-                .filter(e ->  e.isPrimary()==true) 
+                .filter(e -> e.isPrimary())
                 .map(e ->  e.getName()  )
                 .collect(  Collectors.toList()   );
      
@@ -510,10 +510,10 @@ static boolean isInt(String s)
      List<String> t=
     
         tabFields.stream()
-                .filter(e ->  e.getName().equalsIgnoreCase(sfldname) && e.isPrimary()==true ) 
+                .filter(e ->  e.getName().equalsIgnoreCase(sfldname) && e.isPrimary())
                 .map(e ->  e.getName()  )
                 .collect(  Collectors.toList()   );
-        return (t.isEmpty()==false);
+        return (!t.isEmpty());
      
     }
 

@@ -185,7 +185,7 @@ public class Dbtables {
 
     }
 
-    void getCreatePrivs(ResultSet srcTabPks, String sTableName, itable src, itable des) throws Throwable {
+    void getCreatePrivs(ResultSet srcTabPks, String sTableName, itable src, itable des) {
 
         StringBuilder sPkname = new StringBuilder(" ");
         int i = 0;
@@ -417,15 +417,16 @@ public class Dbtables {
         boolean isDbtable = false;
         ResultSet tabexists = null;
         String lTabName = sTabName;
+        String lsSchemaName =sSchemaName;
         
         if (objToSchema.getDbType()== dbtype.db.POSTGRES ) {
             lTabName = lTabName.toLowerCase();
-            sSchemaName = sSchemaName.toLowerCase();
+            lsSchemaName = lsSchemaName.toLowerCase();
         }
         
         try {
             tabexists = conn1.getMetaData()
-                    .getTables(null, sSchemaName// from schema anme
+                    .getTables(null, lsSchemaName// from schema anme
                             , lTabName, new String[]{"TABLE", "AL IAS"} // do we need to pull if it is an alias 
                     );
             isDbtable = tabexists.next();
@@ -521,8 +522,8 @@ public class Dbtables {
                     
                         
                     List<String> FKSQL = a.dptables.gettables().stream()
-                                       .map(e -> ((fkTable) e).PKColumn.CON_TABLE + ";" + ((fkTable) e).PKColumn.field.getName()+ ";"
-                                                   + ((fkTable) e).FkColumn.CON_TABLE +";"+  ((fkTable) e).FkColumn.field.getName()
+                                       .map(e -> e.PKColumn.CON_TABLE + ";" + e.PKColumn.field.getName()+ ";"
+                                                   + e.FkColumn.CON_TABLE +";"+  e.FkColumn.field.getName()
                                        )
                                        .collect(Collectors.toList());
                     if (FKSQL.contains(dp.PKColumn.CON_TABLE + ";"+ dp.PKColumn.field.getName()+ ";" + dp.FkColumn.CON_TABLE + ";" + dp.FkColumn.field.getName())
@@ -570,7 +571,7 @@ public class Dbtables {
 
     }
 
-    public void getTabDetails(String sFrmSchema, String s2Schema, String sTable) throws SQLException, Throwable {
+    public void getTabDetails(String sFrmSchema, String s2Schema, String sTable) throws Throwable {
         ResultSet rsColumns = null;
         String strTabCrtStat = "";
 
@@ -649,7 +650,7 @@ public class Dbtables {
 
         List<String> FKSQL
                 = desttable.fktables.gettables().stream()
-                .map(e -> ((fkTable) e).GetDDL(s2Schema))
+                .map(e -> e.GetDDL(s2Schema))
                 .collect(Collectors.toList());
 
         String strFKSQL = "";
@@ -695,7 +696,7 @@ public class Dbtables {
                         ;
                 List<String> pkFldsNames = desttable.getPKFields()
                         .stream()
-                        .map(e -> ((tfield) e).getName())
+                        .map(e -> e.getName())
                         .collect(Collectors.toList());
                 if (idxFldsNames.size() == pkFldsNames.size() && idxFldsNames.containsAll(pkFldsNames)) //System.out.println("   PK: " + tfpk.getName() + " :  "+ idx.getIndexField(tfpk.getName()).getName() );
                 //if (the columns are smae and have different index name print that out as duplicate )
@@ -776,8 +777,8 @@ public class Dbtables {
         String strPrintMe = "";
         List<String> TabNoPKs
                 = objFrmSchema.gettables().stream()
-                .filter(e -> ((itable) e).getPKField().getName().equalsIgnoreCase("UNKNOW")) // veryf cooll George
-                .map(e -> ((itable) e).getName())
+                .filter(e -> e.getPKField().getName().equalsIgnoreCase("UNKNOW")) // veryf cooll George
+                .map(e -> e.getName())
                 .collect(Collectors.toList());
 
         if (TabNoPKs != null) {
@@ -791,8 +792,8 @@ public class Dbtables {
         strPrintMe = "";
         List<String> TabNoIdxs
                 = objFrmSchema.gettables().stream()
-                .filter(e -> ((itable) e).Indexes != null)
-                .map(e -> ((itable) e).getName())
+                .filter(e -> e.Indexes != null)
+                .map(e -> e.getName())
                 .collect(Collectors.toList());
 
         strPrintMe = TabNoIdxs.stream()

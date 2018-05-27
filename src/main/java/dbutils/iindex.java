@@ -6,13 +6,8 @@
 package dbutils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import static dbutils.idrive.lSumBJCLogger;
 import java.util.stream.Collectors;
 
 /**
@@ -58,17 +53,17 @@ protected  void AddIndexField(tfield tFld, String ORDINAL_POSITION, String ASC_O
         Optional<idxFld>  t= idxfields.stream()
                         .filter(u -> u.indxField.getName().equalsIgnoreCase(fldName))
                             .findFirst();
-        
-        if (t.isPresent())    
+
+        if (t.isPresent())
             return t.get();
-        else return                   
+        else return
             new idxFld(new tfield());
-    
+
 
     }
-  
+
     public List<String> getIndexFields( String fldName ){
-    
+
         List<String>  t= idxfields.stream()
                         .map(u -> u.indxField.getName()) 
                         .collect(Collectors.toList());
@@ -132,7 +127,7 @@ public String GetDDL(String sSchema){
                     + ")";
         sidxCrte = sidxCrte + scols + ";";
 // check if the index fields isempty       
-    if (( scols.equalsIgnoreCase(", ")) || (isvalid== false) )
+    if (( scols.equalsIgnoreCase(", ")) || (!isvalid) )
     { //2017-06-02  custom index which can't be converted 
         sidxCrte = "/*============== Cannot create index >>"+ this.OwnerName + "==============   \n" 
                     + sidxCrte 

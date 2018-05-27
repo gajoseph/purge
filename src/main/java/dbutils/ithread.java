@@ -7,7 +7,6 @@ package dbutils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
-import org.postgresql.copy.CopyIn;
 
 /**
  *
@@ -50,7 +48,7 @@ public class ithread extends Thread {
         sStartTs = new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
         //this.start();
         try {
-            if (this.activeCount() >= 6)
+            if (activeCount() >= 6)
                     this.wait();
           // this.notify(); 
             Class.forName("org.postgresql.Driver");
@@ -191,21 +189,16 @@ public class ithread extends Thread {
                     case COPY:
                       //  copywhat();
                         break;
-                
-                
                 }
                     
                 //Thread.sleep((int)(Math.random() * 10000));
-
                 this.stop();
                 System.out.println("=========================" + getName() + "=========================");
                 System.out.println("Thread :" + getName() + " Started : "+ sStartTs 
-                        
                         + " END "
                         + new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date())
                         );
 
-                
                 this.finalize();
 
                 //this.notify();
@@ -221,7 +214,7 @@ public class ithread extends Thread {
 
     public synchronized boolean getWork() throws InterruptedException {
         synchronized (this) {
-            if (this.activeCount() >= 6) {
+            if (activeCount() >= 6) {
                 this.wait(100);
                 this.notify();
                 return false;
@@ -232,7 +225,7 @@ public class ithread extends Thread {
         }
     }
 
-    public synchronized void RelWork() throws InterruptedException {
+    public synchronized void RelWork() {
 
         synchronized (this) {
             //  this.T.iThreadpool= T.iThreadpool-1;

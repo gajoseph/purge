@@ -1,11 +1,5 @@
 package dbutils;
 
-import org.postgresql.PGConnection;
-import org.postgresql.copy.CopyManager;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.PushbackReader;
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,7 +34,7 @@ public class delthread extends Thread{
         sStartTs = new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
         //this.start();
         try {
-            if (this.activeCount() >= 6)
+            if (activeCount() >= 6)
                 this.wait();
             // this.notify();
             Class.forName("org.postgresql.Driver");// this need to be passed as a parameter/ the connection object
@@ -174,7 +168,7 @@ public class delthread extends Thread{
             }
 
         } catch (Throwable T) {
-            System.out.println("Error in thread" + this.iName + " " + T.getMessage());
+            System.out.println("Error in thread " + this.iName + " " + T.getMessage());
 
         }
 
@@ -182,7 +176,7 @@ public class delthread extends Thread{
 
     public synchronized boolean getWork() throws InterruptedException {
         synchronized (this) {
-            if (this.activeCount() >= 6) {
+            if (activeCount() >= 6) {
                 this.wait(100);
                 this.notify();
                 return false;
@@ -193,7 +187,7 @@ public class delthread extends Thread{
         }
     }
 
-    public synchronized void RelWork() throws InterruptedException {
+    public synchronized void RelWork() {
 
         synchronized (this) {
             //  this.T.iThreadpool= T.iThreadpool-1;

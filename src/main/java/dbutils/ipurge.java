@@ -19,7 +19,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.cert.CollectionCertStoreParameters;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 
 import static bj.fileutils.bkupFile;
 import static bj.fileutils.delallFiles;
-import static dbutils.fkid.*;
 import static java.util.stream.Collectors.*;
 
 
@@ -43,11 +41,11 @@ import static java.util.stream.Collectors.*;
  */
 public class ipurge extends idrive  {
     public String SRC_DB_URL;
-    public String SRC_DB_USER;
-    public String SRC_DB_PASSWORD;
-    public String SRCdbDriver;
+    public final String SRC_DB_USER;
+    public final String SRC_DB_PASSWORD;
+    public final String SRCdbDriver;
     public static Dbtables objDBts;
-    protected iDataloc objSrcloc;
+    protected final iDataloc objSrcloc;
     ResultSet objSelrs = null;
     PreparedStatement _selStatement = null;
     
@@ -55,7 +53,7 @@ public class ipurge extends idrive  {
     public String qlikLoadScriptName= "";
     public String qlikTableName4qvs = "";
     public String qlikTableSchemaName4qvs = "";
-    idTabs lidTabs ;
+    final idTabs lidTabs ;
     boolean bgofornextbatch = false ;
     ExecutorService executor = null; // moved here from deleterows
 
@@ -241,7 +239,7 @@ public class ipurge extends idrive  {
        List<String>FKSQL   = itab.getfields().stream()
                        .map(e ->     
                                    //+ "\t\t//" + ((tfield) e).getType()
-                                     String.format("%-150s  %-50s",repPahse1(((tfield) e)), "//"+((tfield) e).getType() )
+                                     String.format("%-150s  %-50s",repPahse1(((tfield) e)), "//"+ e.getType() )
                            )
                        .collect(Collectors.toList());
         if (FKSQL != null) 
@@ -249,7 +247,7 @@ public class ipurge extends idrive  {
             strFKSQL = FKSQL.stream().map(Object::toString)
                     .collect(Collectors.joining("\n\t,", "\t", "\n;")); // .collect(Collectors.joining("\n\t,\"", "\t\"", "\n;"));
         }
-        if (brcnumber== true )
+        if (brcnumber)
          strFKSQL = strFKSQL.replace("RECNO () AS SOURCERECORDNUMBER","RECNo () as SourceRecordNumber" );
 
             
@@ -304,7 +302,7 @@ public class ipurge extends idrive  {
   }
   
   
-    public void genqvsPhase2(String sphase) throws IOException, Throwable {
+    public void genqvsPhase2(String sphase) {
         String strFrmSch = objDBts.objFrmSchema.getName();
         String sContent = "";
         String strFKSQL = "";
@@ -315,8 +313,8 @@ public class ipurge extends idrive  {
             itab.getfields().add(1, lfield);
 
             List<String> FKSQL = itab.getfields().stream()
-                    .filter(e -> !((tfield) e).getName().equalsIgnoreCase("RECNo () as SourceRecordNumber"))
-                    .map(e -> repPahse2(((tfield) e).getName()))
+                    .filter(e -> !e.getName().equalsIgnoreCase("RECNo () as SourceRecordNumber"))
+                    .map(e -> repPahse2(e.getName()))
                     .collect(Collectors.toList());
 
             if (FKSQL != null) {
@@ -340,7 +338,7 @@ public class ipurge extends idrive  {
     }
     
     
-    public void genqvsPhase3(String sphase) throws IOException, Throwable {
+    public void genqvsPhase3(String sphase) {
         String strFrmSch = objDBts.objFrmSchema.getName();
         String sContent = "";
         String strFKSQL = "";
@@ -351,8 +349,8 @@ public class ipurge extends idrive  {
             itab.getfields().add(1, lfield);
 
             List<String> FKSQL = itab.getfields().stream()
-                    .filter(e -> !((tfield) e).getName().equalsIgnoreCase("RECNo () as SourceRecordNumber"))
-                    .map(e -> repPhase3(((tfield) e).getName()))
+                    .filter(e -> !e.getName().equalsIgnoreCase("RECNo () as SourceRecordNumber"))
+                    .map(e -> repPhase3(e.getName()))
                     .collect(Collectors.toList());
 
             if (FKSQL != null) {
@@ -580,8 +578,8 @@ public class ipurge extends idrive  {
       //
       lSumBJCLogger.setSYSTEM_LOG_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT")));
 
-      lSumBJCLogger.set_SYSTEM_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT.TO.CONSOLE")));;
-    // add the custome join read from property files
+      lSumBJCLogger.set_SYSTEM_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT.TO.CONSOLE")));
+      // add the custome join read from property files
      setCustomjoin();
       strFrmSch = objDBts.objFrmSchema.getName();
      for (itable itab : objDBts.objToSchema.gettables()) {
@@ -616,7 +614,8 @@ public class ipurge extends idrive  {
           lSumBJCLogger.WriteLog(String.format(" Tab: %s.%s calling SetDeleteFlags; i think this is ned only for tables that have more than one parent\n this will be run only fro tables that have > 1 FK"
             , objDBts.objToSchema.getName(), it.getName() ));
 
-          if (it.hasDelStatGenByAnotherParent==false) {
+          if (!it.hasDelStatGenByAnotherParent) {
+              lidTabs.SetDeletableStatusBasedonParent(it);
               setDeleteFlags(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
@@ -626,8 +625,7 @@ public class ipurge extends idrive  {
       for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
       { idTab it = lidTabs.getidtabs().get(j);
           lSumBJCLogger.WriteLog(it.getName() + " Generating Delete statement ");
-          if (it.hasDelStatGenByAnotherParent==false) {
-              lidTabs.SetDeletableStatusBasedonParent(it);
+          if (!it.hasDelStatGenByAnotherParent) {
               DeleteRows(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
@@ -665,7 +663,7 @@ public class ipurge extends idrive  {
     
 
     @Override
-    void setDbConnection() throws Exception {
+    void setDbConnection() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -675,12 +673,12 @@ public class ipurge extends idrive  {
     }
 
     @Override
-    void sqlDbConnection() throws Exception {
+    void sqlDbConnection() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    protected void _updateFillerInfo(LinkedHashMap HL7Msg) throws Exception {
+    protected void _updateFillerInfo(LinkedHashMap HL7Msg) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -742,14 +740,14 @@ public class ipurge extends idrive  {
         String Sdeleet = "";
         String NOdeleet = "";
         String sids2del = "";
-        String slpkidsValue = "";
+        String[] slpkidsValue ;
 
 
         try {
             if (tab.parentId_pkids.fkids().size() > 1) {
                 // first get the non deletable ids
                 NOdeleet = NOdeleet + tab.parentId_pkids.fkids().stream().map(fkid -> fkid.Pks.stream()
-                        .filter(ids -> ids.deleteable == false)
+                        .filter(ids -> !ids.deleteable)
                         .map(ids -> ids.Pkids.stream()
                                 .map(Object::toString)
                                 .collect(Collectors.joining("','")))
@@ -762,17 +760,19 @@ public class ipurge extends idrive  {
                 for (fkid fkid : tab.parentId_pkids.fkids()) {
                     for (ids pids : fkid.Pks) {
                         if (pids.deleteable) {
-                            slpkidsValue = pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+                            //slpkidsValue = pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
+                            slpkidsValue = pids.Pkids.stream().distinct().toArray(String[]::new);
 
                             // need another check if ids has been selected not to be deleted by another parent's  condition
                             // but this won't work if there are table that are n+1 the level
-                            if (NOdeleet.contains(slpkidsValue)) {
-                                lSumBJCLogger.WriteOut(String.format("\t %s can't be deleted b/c its already marked as not deletable and is in the list ", slpkidsValue));
+                            for (String s: slpkidsValue) {
+                                if (NOdeleet.contains(s)) {
+                                    lSumBJCLogger.WriteOut(String.format("\t %s can't be deleted b/c its already marked as not deletable and is in the list ", s));
 
-                                lidTabs.setCanNotDel2allParents(pids, 1);
-                            } else
-                                Sdeleet = Sdeleet + slpkidsValue;
-
+                                    lidTabs.setCanNotDel2allParents(pids, 1);
+                                } else
+                                    Sdeleet = Sdeleet + s;
+                            }
                         }
                         else {
                             //NOdeleet = NOdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
@@ -843,7 +843,7 @@ public class ipurge extends idrive  {
 
             }
             sids2del = sids2del + tab.parentId_pkids.fkids().stream().map(fkid -> fkid.Pks.stream()
-                    .filter(ids -> ids.deleteable == true)
+                    .filter(ids -> ids.deleteable)
                     .map(ids -> ids.Pkids.stream()
                             .map(Object::toString)
                             .collect(Collectors.joining("','")))
@@ -920,7 +920,7 @@ public class ipurge extends idrive  {
                                 , sids2del, NOdeleet)
                         , lPropertyReader.getProperty("SRC.DB.URL"));// Destination is run as threads
 
-                t1.Rtype = t1.Rtype.JDBCBATCH;
+                t1.Rtype = ithread.runtype.JDBCBATCH;
                 executor.execute(t1);
 
 
