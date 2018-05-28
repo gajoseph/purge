@@ -84,9 +84,10 @@ public class idTabs extends tfield {
 
         if (tabs.isEmpty())
             lidTab = initidTab(sTabName);
-         else
-            lidTab =  tabs.get(0);
+         else {
+            lidTab = tabs.get(0);
 
+        }
         return lidTab;
 
     }
@@ -94,7 +95,7 @@ public class idTabs extends tfield {
     public idTab initidTab(String sTabName){
 
         idTab initidTab =   new idTab(sTabName); // create a new instance for child tbale eg housebill--> houseBillSplit; here creating a new insatcne of houseBillSplit to store all ids
-
+       // this.idtabs.add(initidTab);
         return initidTab ;
     }
 

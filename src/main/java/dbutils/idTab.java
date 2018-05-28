@@ -135,12 +135,13 @@ public idTab(String stabName) {
         for (fkid fk : this.parentId_pkids.fkids() ) {
 
             sids = sids + fk.Pks.stream().map(ids -> ids.Pkids.stream().map(Object::toString).collect(Collectors.joining("','")))
-                    .collect(Collectors.joining("','", "('", "')"));
+                    .collect(Collectors.joining("','", "'", "'"));
 
             //SqlpreparedStat = "(" + SqlpreparedStat.substring(0, SqlpreparedStat.length() - 1) + ")"; saving for prepared statement
-            if (!sids.equalsIgnoreCase("")) {
-                SqlpreparedStat = SqlpreparedStat + ":" + sids;
-            }
+
+        }
+        if (!sids.equalsIgnoreCase("")) {
+            SqlpreparedStat = SqlpreparedStat + ":" + "(" + sids + ")";
         }
         return SqlpreparedStat;
     }

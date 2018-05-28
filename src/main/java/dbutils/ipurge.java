@@ -615,8 +615,7 @@ public class ipurge extends idrive  {
             , objDBts.objToSchema.getName(), it.getName() ));
 
           if (!it.hasDelStatGenByAnotherParent) {
-              lidTabs.SetDeletableStatusBasedonParent(it);
-              setDeleteFlags(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
+             setDeleteFlags(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
       executor = Executors.newFixedThreadPool(3);
@@ -626,6 +625,8 @@ public class ipurge extends idrive  {
       { idTab it = lidTabs.getidtabs().get(j);
           lSumBJCLogger.WriteLog(it.getName() + " Generating Delete statement ");
           if (!it.hasDelStatGenByAnotherParent) {
+              lidTabs.SetDeletableStatusBasedonParent(it);
+
               DeleteRows(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
           }
       }
@@ -771,7 +772,7 @@ public class ipurge extends idrive  {
 
                                     lidTabs.setCanNotDel2allParents(pids, 1);
                                 } else
-                                    Sdeleet = Sdeleet + s;
+                                    Sdeleet = Sdeleet + s + ",";
                             }
                         }
                         else {
