@@ -161,14 +161,14 @@ public class idTabs extends tfield {
         chldids.deleteable= false;
 
 
-
-
         if (chldids.parIds !=null) {
             lSumBJCLogger.WriteOut(String.format("%s Setting deletable to false for %s and its children {%s}"
                     ,(new String(new char[level]).replace("\0", "\t"))
                     , chldids.FkID
                     , chldids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"))));
             setCanNotDel2allParents(chldids.parIds , level++);
+
+
         }
     }
 
@@ -189,8 +189,6 @@ public class idTabs extends tfield {
         ssql = getDbFetch_Limit(sPkTabColName,sSchemaName, sTabName , pidTab, sFKTableColname, iCurrentDepth); // added limit in case we want to run in batches limit 10
         /* if the parent de4ons't have rows deletable then child alos can't be deleted */
         lSumBJCLogger.WriteLog(String.format("Sql : %s", ssql ));
-
-
 
         try {
             _selStatement = objDBts.conn1.prepareStatement(ssql);
@@ -218,7 +216,10 @@ public class idTabs extends tfield {
                                                                                     , fkTab);// this wil, also update if the status delete or not based on the condition
                 if (pidTab !=null) {
                     pids =  pidTab.getfkid(objrsrecQry.getString("FK"));
-                }
+                    if (!isDeleteAble)    //updateDeletableStatus(fkTab.PKColumn , objrsrecQry.getString("FK"), false);// need to update all the parents
+                        setCanNotDel2allParents(pids, 1);// we are setting all parents and grand parents as not deletable; added 05/18
+
+                    }
 
                 /* pass the pids to the function */
                 boolean alreadypresent = objidTab.addidTab_ParentPK_Pkids(
@@ -231,12 +232,13 @@ public class idTabs extends tfield {
                 if (alreadypresent)
                     break;
 
-                if (pidTab != null)         // asscoiate the child rows
+/*                if (pidTab != null)         // asscoiate the child rows
                     if (!isDeleteAble) {     //updateDeletableStatus(fkTab.PKColumn , objrsrecQry.getString("FK"), false);// need to update all the parents
-                        //pids.deleteable = isDeleteAble;
-
+                        // set the parent as not deletabel
                         setCanNotDel2allParents(pids, 1);// we are setting all parents and grand parents as not deletable; added 05/18
+
                     }
+                    */
                        /* updateDeletableStatus( pidTab, objrsrecQry.getString("FK"), false, fkTab); /*we had it before don't know why we chnaged */
 
             }
@@ -425,8 +427,6 @@ public class idTabs extends tfield {
 
             } catch (Throwable throwable) {
                 lSumBJCLogger.WriteErrorStack("Throwable From FieldByName", throwable);
-
-
             }
         }
 
@@ -439,7 +439,9 @@ public class idTabs extends tfield {
         String sids = "";
         if (pidTab!= null){
             // check parent is same as previuos childs parent
-            if (!(pidTab.getName().equalsIgnoreCase(scurrParent)))
+            //2018-05-29 This ois removed b/c a given tables has 2 child tables; and on eof the child table rows set the parent to not deletaable
+            // so when a parent becomes not deletagnles we don't wnat to bring the child rows fo theat from the other table. before  idea was to reuse the
+           // if (!(pidTab.getName().equalsIgnoreCase(scurrParent)))
             {
                 scurrParent =pidTab.getName();
                 SqlpreparedStat= "";

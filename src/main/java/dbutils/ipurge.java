@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static bj.fileutils.bkupFile;
 import static bj.fileutils.delallFiles;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
 
 
 /**
@@ -139,7 +139,6 @@ public class ipurge extends idrive  {
                     lSumBJCLogger.WriteLog(objSrcloc._conn.getClass().getName()
                             + objSelrs.getSQLXML("TABLE_TYPE"));
                 }
-
 
             }
 
@@ -488,7 +487,7 @@ public class ipurge extends idrive  {
 
     }
 
-    public String  setCustomjoin(){
+    public String  setCustomjoinCusJoisFFile(){
         String CUSTOM_TAB_JOIN_FILE_NAME= lPropertyReader.getProperty("CUSTOM.TAB.JOIN.FILE.NAME");
         List<String>  CusJoins;
         String stabCusJoin;
@@ -518,7 +517,8 @@ public class ipurge extends idrive  {
                     if ((iPatab!=null) &  (!iPafld.getName().equalsIgnoreCase(""))){
                         Map<fkTable, Boolean> tt = iChtab.fktables.getFktable(atabCusJoin[2].toUpperCase(), objDBts.objToSchema.getName());
                         //tt.forEach((k, v) -> System.out.println("key: " + k + " value:" + v));
-                        for(fkTable id : tt.keySet()){
+                        for(fkTable id : tt.keySet())
+                        {
                             Boolean bfound= tt.get(id);
                             if (bfound )
                                 if (id.PKColumn.field.getName().equalsIgnoreCase(iPafld.getName()))// same fields already added
@@ -534,7 +534,6 @@ public class ipurge extends idrive  {
                         );
 
                         dp.AddFKField(iChld, iChtab.getName(), objDBts.objToSchema.getName(),sFKNAME);
-
 
                         String sPKNAME= objDBts.objToSchema.getName() + iPatab.getName() + iPafld.getName() + iChtab.getName() + iChld.getName();
 
@@ -573,34 +572,30 @@ public class ipurge extends idrive  {
         String WhereClause = "";
 
 
-        if (objDBts.objFrmSchema==null)
+        if (objDBts.objFrmSchema == null)
             getTabBySchema(qlikTableSchemaName4qvs, qlikTableSchemaName4qvs, qlikTableName4qvs);
         //
         lSumBJCLogger.setSYSTEM_LOG_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT")));
 
         lSumBJCLogger.set_SYSTEM_OUT(Boolean.valueOf(lPropertyReader.getProperty("DEBUG.INFO.OUT.TO.CONSOLE")));
         // add the custome join read from property files
-        setCustomjoin();
+        setCustomjoinCusJoisFFile();
+
         strFrmSch = objDBts.objFrmSchema.getName();
+
         for (itable itab : objDBts.objToSchema.gettables()) {
             if (isTabCandiadte(itab))// need to convert in2 a list
-                if (objDBts.isDbtable(objDBts.objFrmSchema.getName(), itab.getName()))
-                { /* db2 doens't like toLower */
+                if (objDBts.isDbtable(objDBts.objFrmSchema.getName(), itab.getName())) { /* db2 doens't like toLower */
                     sStartTime = "Begin" + new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date());
                     lidTabs.SqlpreparedStat = "";
-                    if ( itab.fktables.gettables().isEmpty()) //  if there are no parent then do it; otherwise it will be done when its parent linegae was doen
+                    if (itab.fktables.gettables().isEmpty()) //  if there are no parent then do it; otherwise it will be done when its parent linegae was doen
                     //for (fkTable fk: itab.dptables.gettables())
                     {
                         WhereClause = getRecuriveFKs1(itab, objDBts.objFrmSchema.getName(), 1, null);// get this from from Schema Clause
                     }
-         /*   System.out.println( "--------------------------------------------------------------------------------"    );
-            System.out.println("table = " + itab.getName() + "\n " + strsql + " WhereClauseaa = " + WhereClause);
-            System.out.println("--------------------------------------------------------------------------------"    )
 
-          ;*/
+                }   // dont process the table if the table is no created in destination
 
-                }// dont process the table if the table is no created in destination
-            //else itab.= false
         }// end for
       /*
         new loop thru the itabs and print the delete statement
@@ -609,20 +604,20 @@ public class ipurge extends idrive  {
        */
 
 
-        for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
-        { idTab it = lidTabs.getidtabs().get(j);
+        for (int j = lidTabs.getidtabs().size() - 1; j >= 0; j--) {
+            idTab it = lidTabs.getidtabs().get(j);
             lSumBJCLogger.WriteLog(String.format(" Tab: %s.%s calling SetDeleteFlags; i think this is ned only for tables that have more than one parent\n this will be run only fro tables that have > 1 FK"
-                    , objDBts.objToSchema.getName(), it.getName() ));
+                    , objDBts.objToSchema.getName(), it.getName()));
 
             if (!it.hasDelStatGenByAnotherParent) {
                 setDeleteFlags(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
             }
         }
-        executor = Executors.newFixedThreadPool(3);
 
+        executor = Executors.newFixedThreadPool(3);// 2018-055-30   starting thread executors
 
-        for(int j = lidTabs.getidtabs().size() - 1; j >= 0; j--)
-        { idTab it = lidTabs.getidtabs().get(j);
+        for (int j = lidTabs.getidtabs().size() - 1; j >= 0; j--) {
+            idTab it = lidTabs.getidtabs().get(j);
             lSumBJCLogger.WriteLog(it.getName() + " Generating Delete statement ");
             if (!it.hasDelStatGenByAnotherParent) {
                 lidTabs.SetDeletableStatusBasedonParent(it);
@@ -630,13 +625,13 @@ public class ipurge extends idrive  {
                 DeleteRows(it, objDBts.objToSchema.gettable(it.getName()).getPKField().getName());
             }
         }
-        lSumBJCLogger.WriteOut(String.format(" Start : %s \t %End:%s"              ,sStartTime ,new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date()) ));
+        lSumBJCLogger.WriteOut(String.format(" Start : %s \t %End:%s", sStartTime, new java.text.SimpleDateFormat("HH:mm:ss:SSS").format(new Date())));
 
         executor.shutdown();
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            lSumBJCLogger.WriteErrorStack("executor.awaitTermination!!!!!!!! :: " , e);
+            lSumBJCLogger.WriteErrorStack("executor.awaitTermination!!!!!!!! :: ", e);
             _iErrDesc = "executor.awaitTermination!!!!!!!! :: " + e.getCause() + "\n" + e.getMessage();
             System.out.println("\n:" + _iErrDesc);
         }
@@ -739,6 +734,12 @@ public class ipurge extends idrive  {
 
 
     public void setDeleteFlags(idTab tab, String sFKTableColname ){
+        /*
+        * This proc will take a child table that has > 1 parent. This is to set off deleteabe flag if the child of 1st patent cannot be deleted
+        * then is the same child 's parent on 2nd parent can't be deleted as well
+        *
+        * */
+
         String Sdeleet = "";
         String NOdeleet = "";
         String sids2del = "";
@@ -746,24 +747,29 @@ public class ipurge extends idrive  {
 
 
         try {
-            if (tab.parentId_pkids.fkids().size() > 1) {
+            // Check for more than one parent
+            if (tab.parentId_pkids.fkids().size() > 1)
+            {
                 // first get the non deletable ids
-                NOdeleet = NOdeleet + tab.parentId_pkids.fkids().stream().map(fkid -> fkid.Pks.stream()
-                        .filter(ids -> !ids.deleteable)
-                        .map(ids -> ids.Pkids.stream()
+                NOdeleet = NOdeleet + tab.parentId_pkids.fkids().stream()
+                        .map(fkid -> fkid.Pks.stream()
+                            .filter(ids -> !ids.deleteable)
+                            .map(ids -> ids.Pkids.stream()
                                 .map(Object::toString)
-                                .collect(Collectors.joining("','")))
+                                .collect(Collectors.joining("','"))
+                                )
                         .collect(Collectors.joining("','")))
                         .distinct()
                         .collect(Collectors.joining("','", "('", "')"))
                 ;
                 lSumBJCLogger.WriteOut(String.format("Checking Deleteables for table w/ > 1 FKs %s.%s. \n nodeletable keys are %s", objDBts.objToSchema.getName(), tab.getName(), NOdeleet));
 
+                // now compare ids that are marked as deletable in see if there are in the notdeletable list and mark then off;
+                // then recursively set all the parent  to level 0 parent and then as not deletable
                 for (fkid fkid : tab.parentId_pkids.fkids()) {
-                    for (ids pids : fkid.Pks) {
+                    for (ids pids : fkid.Pks){
                         if (pids.deleteable) {
-                            //slpkidsValue = pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
-                            slpkidsValue = pids.Pkids.stream().distinct().toArray(String[]::new);
+                            slpkidsValue = pids.Pkids.stream().distinct().toArray(String[]::new); // this is support for more than 1 ids
 
                             // need another check if ids has been selected not to be deleted by another parent's  condition
                             // but this won't work if there are table that are n+1 the level
@@ -772,21 +778,16 @@ public class ipurge extends idrive  {
                                     lSumBJCLogger.WriteOut(String.format("\t %s can't be deleted b/c its already marked as not deletable and is in the list ", s));
 
                                     lidTabs.setCanNotDel2allParents(pids, 1);
+
                                 } else
                                     Sdeleet = Sdeleet + s + ",";
                             }
                         }
-                        else {
-                            //NOdeleet = NOdeleet + pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'"));
-
+                        else
+                            {
                             if (pids.parIds != null)// setting  grand parent rows to not deletable;
-                                pids.parIds.deleteable = false;
-                        }
-                        // upate the parent's
-                        //System.out.println(pids.Pkids.stream().distinct().collect(Collectors.joining("','", "'", "'")) + " setDeleteFlags =  " + Sdeleet);
-
-
-
+                                pids.parIds.deleteable = false;// do we need to rrecursively go all the way up or may be this is not needed.
+                            }
                     }
                 }
                 lSumBJCLogger.WriteOut(String.format(" Done checking  keys in %s.%s. \n \t Deleteable keys are : %s", objDBts.objToSchema.getName(), tab.getName(), Sdeleet));
@@ -797,13 +798,13 @@ public class ipurge extends idrive  {
             lSumBJCLogger.WriteErrorStack("setDeleteFlags " ,e ) ;
 
         } finally {
+            // what shld go in here
+
+
 
         }
 
     }
-
-
-
 
     public void DeleteRows(idTab tab, String sFKTableColname ){
         String Sdeleet = "";
@@ -1093,7 +1094,11 @@ public class ipurge extends idrive  {
 
 
         }
+
+
+
         ilpurge = null;
+
 
 
     }

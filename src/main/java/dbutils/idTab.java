@@ -126,12 +126,29 @@ public idTab(String stabName) {
         return parentId_pkids.isParentPksAlreadyAddedtoItab( fk );
     }
 
+    /*
+    *  NOdeleet + tab.parentId_pkids.fkids().stream()
+                        .map(fkid -> fkid.Pks.stream()
+                            .filter(ids -> !ids.deleteable)
+                            .map(ids -> ids.Pkids.stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining("','"))
+                                )
+                        .collect(Collectors.joining("','")))
+                        .distinct()
+                        .collect(Collectors.joining("','", "('", "')"))
+
+    * */
+
+
+
 
     public String getPrepStatSQL(idTab pidTab, contraintcolumn PKColumn){ //NEED CHANGES pass the PKColumn
         String sids = "";
         String SqlpreparedStat= "";
-
+        String NOdeleet= "";
         SqlpreparedStat= " ";
+        /*
         for (fkid fk : this.parentId_pkids.fkids() ) {
 
             sids = sids + fk.Pks.stream().map(ids -> ids.Pkids.stream().map(Object::toString).collect(Collectors.joining("','")))
@@ -140,8 +157,22 @@ public idTab(String stabName) {
             //SqlpreparedStat = "(" + SqlpreparedStat.substring(0, SqlpreparedStat.length() - 1) + ")"; saving for prepared statement
 
         }
+*/
+        sids = sids + this.parentId_pkids.fkids().stream()
+                .map(fkid -> fkid.Pks.stream()
+                        .filter(ids -> ids.deleteable)
+                        .map(ids -> ids.Pkids.stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining("','"))
+                        )
+                        .collect(Collectors.joining("','")))
+                .distinct()
+                .collect(Collectors.joining("','", "('", "')"));
+
+        System.out.println( " initial loop = \n" + sids  + "\n " );
+
         if (!sids.equalsIgnoreCase("")) {
-            SqlpreparedStat = SqlpreparedStat + ":" + "(" + sids + ")";
+            SqlpreparedStat = SqlpreparedStat + ":" + sids ;
         }
         return SqlpreparedStat;
     }

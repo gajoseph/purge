@@ -219,7 +219,7 @@ public class delthread extends Thread{
             if (_ErrList != null) {
                 _ErrList.clear();
             }
-            System.out.println("s="+a );
+            //ystem.out.println("s="+a );
             System.out.println("========================= END " + getName() + "=========================");
 
         } catch (Exception e) {
