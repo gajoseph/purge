@@ -1,0 +1,119 @@
+
+import re
+from collections import OrderedDict
+def tables_in_query(sql_str):
+
+    # remove the /* */ comments
+    q = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql_str)
+
+    # remove whole line -- and # comments
+    lines = [line for line in q.splitlines() if not re.match("^\s*(--|#)", line)]
+
+    # remove trailing -- and # comments
+    q = " ".join([re.split("--|#", line)[0] for line in lines])
+
+    # split on blanks, parens and semicolons
+    tokens = re.split(r"[\s)(;]+", q)
+
+    # scan the tokens. if we see a FROM or JOIN, we set the get_next
+    # flag, and grab the next one (unless it's SELECT).
+
+    result = set()
+    get_next = False
+    for tok in tokens:
+        if get_next:
+            if tok.lower() not in ["", "select"]:
+                result.add(tok)
+            get_next = False
+        get_next = tok.lower() in ["from", "join"]
+
+    return result
+
+
+def cols_in_query(sql_str):
+
+    # remove the /* */ comments
+    q = re.sub(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", "", sql_str)
+
+    # remove whole line -- and # comments
+    lines = [line for line in q.splitlines() if not re.match("^\s*(--|#)", line)]
+
+    # remove trailing -- and # comments
+    q = " ".join([re.split("--|#", line)[0] for line in lines])
+
+    from_token = re.split("From", q)[0]
+    tokens = OrderedDict()
+    tokens = re.split(",", from_token)
+    print(tokens)
+
+    # scan the tokens. if we see a FROM or JOIN, we set the get_next
+    # flag, and grab the next one (unless it's SELECT).
+
+    result = OrderedDict()
+    get_next = False
+    asd = []
+    stackable = 0
+    for tok in tokens:
+        if get_next:
+            if stackable>0:
+                if ")" in tok:
+                    stackable = stackable - tok.count(")")
+                elif  "(" in tok:
+                    stackable = stackable + tok.count("(")
+                asd.append(tok.strip())
+            else:
+                if asd !="":
+                    d= ''.join(asd)
+                    result[d] = d
+                asd = []
+                if "(" in tok:
+                    asd.append(tok)
+                    stackable = stackable + tok.count("(")
+                else:
+                    result[tok] = tok.strip()
+        else:
+            get_next = "select" in tok.lower()
+            #result.add(tok.lower().replace("select", ""))
+            d = tok.lower().replace("select", "").strip()
+            result[d] = d
+
+    if len(asd) >0:
+        d = ''.join(asd)
+        result[d] = d
+    return result
+
+
+sql = """
+
+Select  
+    trim(ct.TBCREATOR)|| '.'|| ct.tbname as sch_tab_name
+    , colNO
+    , name
+    , coltype
+    , FK_COL_NAME
+    , fk_tab_creator
+    , fk_tab_name
+    , replace(sch_tab_name, '.', '_')||':'||COLNO ||'->'||fk_tab_creator||'_'||fk_tab_name||':3;' as gggg
+    , replace(((replace(asd), '+', '_'), "", "" ))  as testtest2
+From 
+    lib://asd/child_tabs.qvd ct --join sysibm.syscolumns upc on ct.TBNAME = upc.tbname and ct.TBCREATOR = upc.TBCREATOR
+where 
+    trim(ct.TBCREATOR)|| '.'|| ct.tbname in ( 'asd.asd', 'qwe.qwe', 'pop.pop', 'zzz.zz', 'xxx.hyy')
+
+
+"""
+
+
+a = tables_in_query(sql)
+print(a)
+
+a= cols_in_query(sql)
+print("dfdsfsfs")
+for i in a:
+    print(i, )
+
+from sql_metadata import Parser
+a = Parser(sql)
+print(a.columns)
+print(a.columns_aliases)
+
